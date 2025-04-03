@@ -1,340 +1,280 @@
-/* eslint-disable no-unused-expressions */
-/* eslint-disable no-useless-computed-key */
-/* eslint-disable no-useless-concat */
 import {
   Button,
   Card,
-  Checkbox,
   Col,
   Form,
   Input,
   InputNumber,
   message,
   Modal,
-  Radio,
   Row,
   Select,
-  Space,
-  Spin,
-  Tag,
-  Upload,
-  Image,
+  Table,
+  Typography,
 } from "antd";
-import { useForm } from "antd/lib/form/Form";
-import React, { useEffect, useState } from "react";
-import { notification } from "antd";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  MinusCircleOutlined,
-  PlusOutlined,
-  VerticalAlignTopOutlined,
-} from "@ant-design/icons";
-import { isNil, isEmpty, uniq } from "lodash";
-import TextArea from "antd/lib/input/TextArea";
-import { SwatchesPicker } from "react-color";
+
+const { Text } = Typography;
 
 const ProduitModalAddEdit = (props) => {
-  const { visible, onCancel } = props;
-  const [Loading, setLoading] = useState(false);
-  const [cat, setcat] = useState([]);
-  const [collection, setcollection] = useState([]);
-  const [collectionId, setcollectionId] = useState(1);
-  const [images, setimages] = useState([]);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState("");
-  const serverURL = "http://127.0.0.1:3000";
+  const { visible, onCancel, type, record, refetch } = props;
+  const [form] = Form.useForm();
+  const [magasins, setMagasins] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [quantities, setQuantities] = useState([]);
 
-  const [form] = useForm();
-
+  // Initialize quantities from record or empty array
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:3000/api/v1/categories")
-      .then((response) => {
-        console.log("response", response);
-        if (response.data.data) {
-          setcat(response.data.data);
-        } else {
-          notification.error({ message: "No Data Found" });
-        }
-      });
+      .get("http://127.0.0.1:3000/magasins")
+      .then((response) => setMagasins(response.data))
+      .catch((err) => console.error("Error loading stores:", err));
 
-    axios
-      .get("http://127.0.0.1:3000/api/v1/collection")
-      .then((response) => {
-        console.log("response", response);
-        if (response.data.data) {
-          setcollection(response.data.data);
-        } else {
-          notification.error({ message: "No Data Found" });
-        }
-      });
-
-    if (props.type === "EDIT") {
+    if (type === "EDIT" && record?.quantite) {
+      setQuantities(record.quantite);
       form.setFieldsValue({
-        categoryId: props?.record.categoryId,
-        collectionId: props?.record.collectionId,
-        description: props?.record.description,
-        detail: props?.record.detail,
-        name: props?.record.name,
-        createdAt: props?.record.createdAt,
-        updatedAt: props?.record.createdAt,
-        options: props?.record.option.map((el) => ({
-          ...el,
-          colors: ["eeeee"],
-          images: el?.images?.split(","),
-          sizes: ["iphone"],
-          stock: el?.stock,
-          price: el?.price,
-          discount: Number(el?.discount),
-          id: el.id,
-        })),
+        ...record,
       });
-
-      let list = [];
-      props?.record.option.forEach((el) => {
-        list = [
-          ...list,
-          isEmpty(el?.images?.split(",")) ? [] : el?.images?.split(","),
-        ];
-      });
-
-      console.log("list", list);
-      setimages(list);
     } else {
-      form.setFieldsValue({});
       form.resetFields();
-      setimages([]);
+      setQuantities([]);
     }
-  }, [form, props.record, props.visibl]);
+  }, [visible, record]);
 
-  const handlePreview = async (file) => {
-    setPreviewImage(file.url || file.preview);
-    setPreviewOpen(true);
+  const handleAddMagasin = () => {
+    setQuantities([
+      ...quantities,
+      {
+        magasinId: "",
+        quantiteInitiale: 0,
+        quantiteVendue: 0,
+        quantitePerdue: 0,
+      },
+    ]);
   };
 
-  const handleChange = async (info, key) => {
-    const oldimges = [...images];
+  const handleRemoveMagasin = (index) => {
+    const newQuantities = [...quantities];
+    newQuantities.splice(index, 1);
+    setQuantities(newQuantities);
+  };
 
+  const handleQuantityChange = (index, field, value) => {
+    const newQuantities = [...quantities];
+    newQuantities[index][field] = value;
+    setQuantities(newQuantities);
+
+    console.log("tttttttttttt", field, value, newQuantities);
+  };
+
+  const onFinish = async (values) => {
     setLoading(true);
     try {
-      const listOfPromise = [];
-      info?.fileList?.forEach((el) => {
-        if (!isNil(el?.originFileObj?.name)) {
-          var bodyFormData = new FormData();
+      const payload = {
+        ...values,
+        quantite: quantities.map((q) => ({
+          ...q,
+          quantiteInitiale: Number(q.quantiteInitiale),
+          quantiteVendue: Number(q.quantiteVendue),
+          quantitePerdue: Number(q.quantitePerdue),
+        })),
+      };
 
-          bodyFormData.append("images", el?.originFileObj);
+      if (type === "EDIT") {
+        await axios.put(`http://127.0.0.1:3000/stock/${record._id}`, payload);
+        message.success("Stock mis à jour avec succès");
+      } else {
+        await axios.post("http://127.0.0.1:3000/stock", payload);
+        message.success("Stock créé avec succès");
+      }
 
-          if (!oldimges[key]) {
-            oldimges[key] = [];
+      refetch();
+      onCancel();
+    } catch (error) {
+      message.error("Erreur lors de l'enregistrement");
+      console.error("API Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = [
+    {
+      title: "Magasin",
+      dataIndex: "magasinId",
+      render: (_, record, index) => (
+        <Select
+          value={quantities[index]?.magasinId}
+          onChange={(value) => handleQuantityChange(index, "magasinId", value)}
+          placeholder="Sélectionner un magasin"
+          style={{ width: "100%" }}
+        >
+          {magasins.map((magasin) => (
+            <Select.Option key={magasin._id} value={magasin._id}>
+              {magasin.nom}
+            </Select.Option>
+          ))}
+        </Select>
+      ),
+    },
+    {
+      title: "Quantité Initiale",
+      dataIndex: "quantiteInitiale",
+      render: (_, record, index) => (
+        <InputNumber
+          value={quantities[index]?.quantiteInitiale}
+          onChange={(value) =>
+            handleQuantityChange(index, "quantiteInitiale", value)
           }
-
-          const Listimages = oldimges[key];
-
-          Listimages.push(
-            "http://127.0.0.1:3000" + "/images/" + el?.name
-          );
-          setimages(oldimges);
-
-          const col = collectionId == 1 ? "/api/upload" : "/api/upload/insta";
-
-          console.log("eeeeeeeeeeeeeeeeeeeee dddddddddddd", collectionId);
-
-          listOfPromise.push(
-            axios({
-              method: "post",
-              url: "http://127.0.0.1:3000" + col,
-              data: bodyFormData,
-              headers: { "Content-Type": "multipart/form-data" },
-            })
-          );
-        }
-      });
-      await Promise.all(listOfPromise);
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      console.log(err);
-    }
-  };
-
-  const handleonfinish = async (val) => {
-    const config = {
-      headers: {
-        authorization: JSON.parse(localStorage.getItem("token")),
-      },
-    };
-    let user = JSON.parse(localStorage.getItem("user"));
-    const values = {
-      ...val,
-      id: props.record.id,
-    };
-    const option = values?.options?.map((el, key) => ({
-      ...el,
-      images: images[key].join(","),
-      sizes: "iphone",
-      price: Number(el.price),
-      discount: Number(el.discount ?? 0),
-      stock: Number(el.stock),
-      color: "eeeee",
-      id: el?.id,
-    }));
-    if (props.type === "EDIT") {
-      await axios
-        .put("http://127.0.0.1:3000/api/v1/products/" + values.id, {
-          name: values.name,
-          description: values.description,
-          detail: values.detail,
-          categoryId: values.categoryId,
-          collectionId: values.collectionId,
-          option: option,
-        })
-        .then((response) => {
-          notification.success({ message: "Update Done  " });
-          props.refetech();
-          onCancel();
-        })
-        .catch(function (err) {
-          props.refetech();
-          onCancel();
-        });
-    } else {
-      await axios
-        .post("http://127.0.0.1:3000/api/v1/products", {
-          name: values.name,
-          description: values.description,
-          detail: values.detail,
-          categoryId: values.categoryId,
-          collectionId: values.collectionId,
-          option: option,
-        })
-        .then((response) => {
-          notification.success({ message: "Create Done  " });
-          props.refetech();
-          onCancel();
-        })
-        .catch(function (err) {
-          props.refetech();
-          onCancel();
-        });
-    }
-  };
+          min={0}
+          style={{ width: "100%" }}
+        />
+      ),
+    },
+    {
+      title: "Quantité Vendue",
+      dataIndex: "quantiteVendue",
+      render: (_, record, index) => (
+        <InputNumber
+          value={quantities[index]?.quantiteVendue}
+          onChange={(value) =>
+            handleQuantityChange(index, "quantiteVendue", value)
+          }
+          min={0}
+          style={{ width: "100%" }}
+        />
+      ),
+    },
+    {
+      title: "Quantité Perdue",
+      dataIndex: "quantitePerdue",
+      render: (_, record, index) => (
+        <InputNumber
+          value={quantities[index]?.quantitePerdue}
+          onChange={(value) =>
+            handleQuantityChange(index, "quantitePerdue", value)
+          }
+          min={0}
+          style={{ width: "100%" }}
+        />
+      ),
+    },
+    {
+      title: "Action",
+      render: (_, __, index) => (
+        <MinusCircleOutlined onClick={() => handleRemoveMagasin(index)} />
+      ),
+    },
+  ];
 
   return (
-    <Form
-      form={form}
-      onFinish={handleonfinish}
-      preserve={props.type === "EDIT" ? true : false}
+    <Modal
+      title={type === "EDIT" ? "MODIFIER LE STOCK" : "AJOUTER UN NOUVEAU STOCK"}
+      visible={visible}
+      width={1000}
+      onCancel={onCancel}
+      onOk={() => form.submit()}
+      confirmLoading={loading}
+      okText={type === "EDIT" ? "Mettre à jour" : "Créer"}
+      cancelText="Annuler"
     >
-      <div className="site-card-border-less-wrapper">
-        <Modal
-          title={props.type === "EDIT" ? "UPDATE" : "CREATE sssssss"}
-          visible={visible}
-          destroyOnClose
-          onOk={() => {
-            form.submit();
-          }}
-          width={1000}
-          onCancel={onCancel}
-        >
-          <Card
-            centered
-            style={{
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Row justify="space-between" gutter={16}>
-              <Col span={24}>
-                <Form.Item
-                  name="name"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input your name!",
-                    },
-                  ]}
-                >
-                  <Input placeholder="name" type="name" />
-                </Form.Item>
-              </Col>
+      <Form form={form} onFinish={onFinish} layout="vertical">
+        <Card>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="nom"
+                label="Nom du Produit"
+                rules={[
+                  { required: true, message: "Ce champ est obligatoire" },
+                ]}
+              >
+                <Input placeholder="Entrez le nom du produit" />
+              </Form.Item>
+            </Col>
 
-              <Col span={24}>
-                <Form.Item
-                  name="categoryId"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input your categoryId!",
-                    },
-                  ]}
-                >
-                  <Select
-                    placeholder="category"
-                    options={cat.map((el) => ({
-                      value: el.id,
-                      label: el.name,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
+            <Col span={12}>
+              <Form.Item
+                name="reference"
+                label="Référence"
+                rules={[
+                  { required: true, message: "Ce champ est obligatoire" },
+                ]}
+              >
+                <Input placeholder="Entrez la référence" />
+              </Form.Item>
+            </Col>
 
-              <Col span={24}>
-                <Form.Item
-                  name="collectionId"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input your collectionId!",
-                    },
-                  ]}
-                >
-                  <Select
-                    placeholder="collection"
-                    options={collection.map((el) => ({
-                      value: el.id,
-                      label: el.name,
-                    }))}
-                    onSelect={(val) => {
-                      setcollectionId(val);
-                    }}
-                  />
-                </Form.Item>
-              </Col>
+            <Col span={8}>
+              <Form.Item
+                name="taille"
+                label="Taille (1-6)"
+                rules={[
+                  { required: true, message: "Ce champ est obligatoire" },
+                  {
+                    type: "number",
+                    min: 1,
+                    max: 6,
+                    message: "Doit être entre 1 et 6",
+                  },
+                ]}
+              >
+                <InputNumber style={{ width: "100%" }} />
+              </Form.Item>
+            </Col>
 
-              <Col span={24}>
-                <Form.Item
-                  name="detail"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input your detail!",
-                    },
-                  ]}
-                >
-                  <TextArea placeholder="detail" type="detail" />
-                </Form.Item>
-              </Col>
+            <Col span={8}>
+              <Form.Item
+                name="prixAchat"
+                label="Prix d'Achat (€)"
+                rules={[
+                  { required: true, message: "Ce champ est obligatoire" },
+                ]}
+              >
+                <InputNumber style={{ width: "100%" }} min={0} step={0.01} />
+              </Form.Item>
+            </Col>
 
-              <Col span={24}>
-                <Form.Item
-                  name="description"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please input your description!",
-                    },
-                  ]}
-                >
-                  <TextArea placeholder="description" type="textarea" />
-                </Form.Item>
-              </Col>
+            <Col span={8}>
+              <Form.Item
+                name="prixVente"
+                label="Prix de Vente (€)"
+                rules={[
+                  { required: true, message: "Ce champ est obligatoire" },
+                ]}
+              >
+                <InputNumber style={{ width: "100%" }} min={0} step={0.01} />
+              </Form.Item>
+            </Col>
 
-          
-            </Row>
-          </Card>
-        </Modal>
-      </div>
-    </Form>
+            <Col span={24}>
+              <Text strong style={{ display: "block", marginBottom: 16 }}>
+                Quantités par Magasin
+              </Text>
+
+              <Table
+                columns={columns}
+                dataSource={quantities}
+                pagination={false}
+                rowKey={(_, index) => index}
+                footer={() => (
+                  <Button
+                    type="dashed"
+                    onClick={handleAddMagasin}
+                    block
+                    icon={<PlusOutlined />}
+                  >
+                    Ajouter un Magasin
+                  </Button>
+                )}
+              />
+            </Col>
+          </Row>
+        </Card>
+      </Form>
+    </Modal>
   );
 };
 

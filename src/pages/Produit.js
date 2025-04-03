@@ -137,20 +137,18 @@ const Produit = () => {
   )?.can;
 
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:3000/api/v1/products")
-      .then((response) => {
-        if (response.data.data) {
-          setSearch("");
-          setfilterData([]);
-          let sorted_obj = _.sortBy(response.data.data, function (o) {
-            return Number(o.id);
-          });
-          setData(sorted_obj);
-        } else {
-          notification.error({ message: "No Data Found" });
-        }
-      });
+    axios.get("http://127.0.0.1:3000/stock").then((response) => {
+      if (response.data) {
+        setSearch("");
+        setfilterData([]);
+        let sorted_obj = _.sortBy(response.data, function (o) {
+          return Number(o._id);
+        });
+        setData(sorted_obj);
+      } else {
+        notification.error({ message: "No Data Found" });
+      }
+    });
   }, [refetech]);
 
   const handrefetech = () => {
@@ -163,7 +161,7 @@ const Produit = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete("http://127.0.0.1:3000/api/v1/products/" + dataDelete)
+          .delete("http://127.0.0.1:3000/stock/" + dataDelete)
           .then((response) => {
             message.success("Produit supprimer avec success.");
             handrefetech();
@@ -176,26 +174,17 @@ const Produit = () => {
     setIsModalCat(true);
   };
 
-  console.log("record", data);
-
   const columns = [
     {
-      title: "Id du produit",
-      dataIndex: "id",
-      key: "id",
-    },
-
-    {
-      title: "image",
-      render: (text) => (
-        <img src={text.option[0].images.split(",")[0]} width={80} />
-      ),
+      title: "reference",
+      dataIndex: "reference",
+      key: "reference",
     },
 
     {
       title: "Nom",
-      dataIndex: "name",
-      key: "name",
+      dataIndex: "nom",
+      key: "nom",
     },
 
     // {
@@ -218,76 +207,54 @@ const Produit = () => {
     //     return <time>{formattedDate}</time>;
     //   },
     // },
-    {
-      title: "updatedAt",
-      key: "updatedAt",
-      dataIndex: "updatedAt",
-      render: (x) => {
-        if (!x) {
-          return (
-            <Badge
-              className="site-badge-count-109"
-              style={{}}
-              status="processing"
-              text="Non modifié"
-            />
-          );
-        }
 
-        const dateObject = datetime(x);
-        const formattedDate = dateObject.format("DD/MM/YYYY");
-        return <time>{formattedDate}</time>;
-      },
-    },
     {
       title: "Action",
       key: "action",
       render: (_, record) => (
         <div className="action-buttons">
           <Row>
-            {abilities.includes("edit") && (
-              <Col span={8} className="ms-2">
-                {" "}
-                <Button
-                  onClick={() => {
-                    setVisible(true);
-                    setrecord(record);
-                    setAction("EDIT");
-                  }}
-                >
-                  <EditTwoTone />
-                </Button>
-              </Col>
-            )}
+            {/* {abilities.includes("edit") && ( */}
+            <Col span={8} className="ms-2">
+              {" "}
+              <Button
+                onClick={() => {
+                  setVisible(true);
+                  setrecord(record);
+                  setAction("EDIT");
+                }}
+              >
+                <EditTwoTone />
+              </Button>
+            </Col>
+            {/* // )} */}
 
-            {abilities.includes("read") && (
-              <Col span={8} className="ms-2">
-                {" "}
-                <Button
-                  onClick={() => {
-                    setshow(true);
-                    setrecord(record);
-                    setrecordOption(record?.option);
-                    setoptionColor(record?.option[0].color);
-                  }}
-                >
-                  <InfoCircleOutlined />
-                </Button>
-              </Col>
-            )}
+            {/* {abilities.includes("read") && ( */}
+            <Col span={8} className="ms-2">
+              {" "}
+              <Button
+                onClick={() => {
+                  setshow(true);
+                  setrecord(record);
+                }}
+              >
+                <InfoCircleOutlined />
+              </Button>
+            </Col>
+            {/* )}
 
-            {abilities.includes("delete") && (
-              <Col span={8}>
-                {" "}
-                <Button
-                  type="primary"
-                  danger
-                  onClick={() => showPromiseConfirm(record, record.id)}
-                >
-                  <DeleteTwoTone twoToneColor="#FFFFFF" />
-                </Button>
-              </Col>
-            )}
+            {abilities.includes("delete") && ( */}
+            <Col span={8}>
+              {" "}
+              <Button
+                type="primary"
+                danger
+                onClick={() => showPromiseConfirm(record, record.id)}
+              >
+                <DeleteTwoTone twoToneColor="#FFFFFF" />
+              </Button>
+            </Col>
+            {/* )} */}
           </Row>
         </div>
       ),
@@ -319,21 +286,6 @@ const Produit = () => {
               title="Liste des produits"
               extra={
                 <div className="d-flex ">
-                  <Select
-                    style={{ marginRight: 25 }}
-                    onChange={(value) => {
-                      setSearch(value);
-                      setfilterData(
-                        data.filter((el) => el?.collectionId === Number(value))
-                      );
-                    }}
-                    value={search}
-                  >
-                    <Select.Option value="1">MOKAP PRODUCT</Select.Option>
-                    <Select.Option value="2"> IG PRODUCT</Select.Option>
-                    <Select.Option value=""> ALL PRODUCT</Select.Option>
-                  </Select>
-
                   <Input
                     style={{ marginRight: 25 }}
                     onChange={(e) => {
@@ -351,30 +303,31 @@ const Produit = () => {
                     Rechercher
                   </Button>
 
-                  {abilities.includes("create") && (
-                    <Button
-                      type="primary"
-                      onClick={() => {
-                        setVisiblewithoutexcel(true);
-                        setrecord({});
-                        setAction("ADD");
-                      }}
-                    >
-                      Ajouter un produit
-                    </Button>
-                  )}
-                  {abilities.includes("create") && (
-                    <Button
-                      type="primary"
-                      onClick={() => {
-                        setVisible(true);
-                        setrecord({});
-                        setAction("ADD");
-                      }}
-                    >
-                      Importer depuis Excel
-                    </Button>
-                  )}
+                  {/* {abilities.includes("create") && ( */}
+                  <Button
+                    style={{ marginRight: 25 }}
+                    type="primary"
+                    onClick={() => {
+                      setVisible(true);
+                      setrecord({});
+                      setAction("ADD");
+                    }}
+                  >
+                    Ajouter un produit
+                  </Button>
+                  {/* // )}
+                  // {abilities.includes("create") && ( */}
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      setVisiblewithoutexcel(true);
+                      setrecord({});
+                      setAction("ADD");
+                    }}
+                  >
+                    Importer depuis Excel
+                  </Button>
+                  {/* )} */}
                 </div>
               }
             >
@@ -396,13 +349,13 @@ const Produit = () => {
           type={action}
           onCancel={() => setVisible(false)}
         />
-        <ProduitModalAddEditWithoutexcel
+        {/* <ProduitModalAddEditWithoutexcel
           visible={visiblewithoutexcel}
           record={action === "EDIT" ? record : {}}
           refetech={handrefetech}
           type={action}
           onCancel={() => setVisiblewithoutexcel(false)}
-        />
+        /> */}
 
         <Modal
           visible={show}
@@ -412,83 +365,9 @@ const Produit = () => {
           footer={false}
         >
           {record && (
-            <Badge.Ribbon
-              style={{ marginTop: 15 }}
-              color="red"
-              text={`       ${
-                recordOption &&
-                (recordOption.filter((el) => el.color === optionColor)[0]
-                  ?.discount ??
-                  0)
-              } % 
-                   `}
-            >
+            <Badge.Ribbon style={{ marginTop: 15 }} color="red">
               <Card>
-                <Row>
-                  <Col span={12}>
-                    <div className="ant-row-flex ant-row-flex-center">
-                      {/* <Image
-                     src={
-                       record &&
-                       recordOption
-                         .filter((el) => el.color === optionColor)[0]
-                         ?.images?.split(",")[0]
-                     }
-                     width={300}
-                   /> */}
-
-                      <Carousel autoplay>
-                        {record &&
-                          recordOption
-                            ?.filter((el) => el.color === optionColor)[0]
-                            ?.images?.split(",")
-                            ?.map((el) => {
-                              return <Image src={el} width={"90%"} />;
-                            })}
-                      </Carousel>
-                    </div>
-                  </Col>
-
-                  <Col span={12} style={{ padding: 15 }}>
-                    <h1> {record && record?.name} </h1>
-
-                    <p>{record && record?.description} </p>
-                    <hr />
-                    <p>{record && record?.detail} </p>
-                    <hr />
-
-                    <Row style={{ marginTop: 20 }}>
-                      <CirclePicker
-                        colors={record?.option?.map((el) => el.color)}
-                        color={optionColor}
-                        onChangeComplete={(val) => {
-                          setoptionColor(val.hex);
-                        }}
-                      />
-                    </Row>
-
-                    <Row style={{ marginTop: 20 }}>
-                      {recordOption &&
-                        recordOption
-                          ?.filter((el) => el.color === optionColor)[0]
-                          ?.size?.split(",")
-                          ?.map((elm) => <Tag>{elm}</Tag>)}
-                    </Row>
-
-                    <Row style={{ marginTop: 20 }}>
-                      <strong>
-                        <h2>
-                          {" "}
-                          {recordOption &&
-                            recordOption?.filter(
-                              (el) => el.color === optionColor
-                            )[0]?.price}
-                          {" € "}
-                        </h2>
-                      </strong>
-                    </Row>
-                  </Col>
-                </Row>
+                <Row></Row>
               </Card>
             </Badge.Ribbon>
           )}
