@@ -129,7 +129,7 @@ const SignIn = () => {
     console.log("Success:", values);
 
     const res = axios
-      .post("https://www.tnprime.shop:6443/api/v1/admins/login", {
+      .post("http://127.0.0.1:3000/api/v1/admins/login", {
         email: values.email,
         password: values.password,
       })

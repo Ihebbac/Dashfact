@@ -36,7 +36,7 @@ const AddOrUpdateAdmin = (props) => {
   const [Loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
-  const serverURL = "https://www.tnprime.shop:6443";
+  const serverURL = "http://127.0.0.1:3000";
 
   const [form] = useForm();
 
@@ -70,7 +70,7 @@ const AddOrUpdateAdmin = (props) => {
     if (props.type === "EDIT") {
       console.log("edit", values);
       await axios
-        .put("https://www.tnprime.shop:6443/api/v1/users/users/" + values.id, {
+        .put("http://127.0.0.1:3000/api/v1/users/users/" + values.id, {
           name: values.name,
           email: values.email,
           password: values.password,
@@ -89,7 +89,7 @@ const AddOrUpdateAdmin = (props) => {
     } else {
       console.log("from", form.getFieldValue("data"));
       await axios
-        .post("https://www.tnprime.shop:6443/api/v1/users/users", {
+        .post("http://127.0.0.1:3000/api/v1/users/users", {
           name: values.name,
           email: values.email,
           password: values.password,

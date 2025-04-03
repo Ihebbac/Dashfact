@@ -138,7 +138,7 @@ const Produit = () => {
 
   useEffect(() => {
     axios
-      .get("https://www.tnprime.shop:6443/api/v1/products")
+      .get("http://127.0.0.1:3000/api/v1/products")
       .then((response) => {
         if (response.data.data) {
           setSearch("");
@@ -163,7 +163,7 @@ const Produit = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete("https://www.tnprime.shop:6443/api/v1/products/" + dataDelete)
+          .delete("http://127.0.0.1:3000/api/v1/products/" + dataDelete)
           .then((response) => {
             message.success("Produit supprimer avec success.");
             handrefetech();
@@ -296,7 +296,7 @@ const Produit = () => {
 
   const handelrecherche = () => {
     axios
-      .get("https://www.tnprime.shop:6443/api/v1/products/search?q=" + search)
+      .get("http://127.0.0.1:3000/api/v1/products/search?q=" + search)
       .then((response) => {
         console.log("response", response);
         if (response.data.data) {

@@ -42,13 +42,13 @@ const ProduitModalAddEdit = (props) => {
   const [images, setimages] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
-  const serverURL = "https://www.tnprime.shop:6443";
+  const serverURL = "http://127.0.0.1:3000";
 
   const [form] = useForm();
 
   useEffect(() => {
     axios
-      .get("https://www.tnprime.shop:6443/api/v1/categories")
+      .get("http://127.0.0.1:3000/api/v1/categories")
       .then((response) => {
         console.log("response", response);
         if (response.data.data) {
@@ -59,7 +59,7 @@ const ProduitModalAddEdit = (props) => {
       });
 
     axios
-      .get("https://www.tnprime.shop:6443/api/v1/collection")
+      .get("http://127.0.0.1:3000/api/v1/collection")
       .then((response) => {
         console.log("response", response);
         if (response.data.data) {
@@ -131,7 +131,7 @@ const ProduitModalAddEdit = (props) => {
           const Listimages = oldimges[key];
 
           Listimages.push(
-            "https://www.tnprime.shop:6443" + "/images/" + el?.name
+            "http://127.0.0.1:3000" + "/images/" + el?.name
           );
           setimages(oldimges);
 
@@ -142,7 +142,7 @@ const ProduitModalAddEdit = (props) => {
           listOfPromise.push(
             axios({
               method: "post",
-              url: "https://www.tnprime.shop:6443" + col,
+              url: "http://127.0.0.1:3000" + col,
               data: bodyFormData,
               headers: { "Content-Type": "multipart/form-data" },
             })
@@ -180,7 +180,7 @@ const ProduitModalAddEdit = (props) => {
     }));
     if (props.type === "EDIT") {
       await axios
-        .put("https://www.tnprime.shop:6443/api/v1/products/" + values.id, {
+        .put("http://127.0.0.1:3000/api/v1/products/" + values.id, {
           name: values.name,
           description: values.description,
           detail: values.detail,
@@ -199,7 +199,7 @@ const ProduitModalAddEdit = (props) => {
         });
     } else {
       await axios
-        .post("https://www.tnprime.shop:6443/api/v1/products", {
+        .post("http://127.0.0.1:3000/api/v1/products", {
           name: values.name,
           description: values.description,
           detail: values.detail,
