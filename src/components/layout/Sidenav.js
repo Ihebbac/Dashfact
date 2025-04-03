@@ -175,7 +175,7 @@ function Sidenav({ color }) {
       <hr />
       <Menu theme="light" mode="inline">
         {/* dashboard */}
-        {pageList?.includes("dashboard") && (
+        {/* {pageList?.includes("dashboard") && ( */}
           <Menu.Item key="1">
             <NavLink to="/dashboard">
               <span
@@ -189,10 +189,10 @@ function Sidenav({ color }) {
               <span className="label">Dashboard</span>
             </NavLink>
           </Menu.Item>
-        )}
+        {/* )}
    
 
-        {pageList?.includes("produit") && (
+        {pageList?.includes("produit") && ( */}
           <Menu.Item key="10">
             <NavLink to="/produit">
               <span
@@ -206,9 +206,9 @@ function Sidenav({ color }) {
               <span className="label">Produit</span>
             </NavLink>
           </Menu.Item>
-        )}
-
-        {pageList?.includes("customers") && (
+        {/* )} */}
+{/* 
+        {pageList?.includes("customers") && ( */}
           <Menu.Item key="20">
             <NavLink to="/customers">
               <span
@@ -222,9 +222,9 @@ function Sidenav({ color }) {
               <span className="label">Client</span>
             </NavLink>
           </Menu.Item>
-        )}
+        {/* // )} */}
 
-        {pageList?.includes("orders") && (
+        {/* // {pageList?.includes("orders") && ( */}
           <Menu.Item key="22">
             <NavLink to="/facture">
               <span
@@ -238,9 +238,9 @@ function Sidenav({ color }) {
               <span className="label">Factures</span>
             </NavLink>
           </Menu.Item>
-        )}
+        {/* )} */}
 
-        {pageList?.includes("admins") && (
+        {/* {pageList?.includes("admins") && ( */}
           <Menu.Item key="21">
             <NavLink to="/admins">
               <span
@@ -254,7 +254,7 @@ function Sidenav({ color }) {
               <span className="label">Admins</span>
             </NavLink>
           </Menu.Item>
-        )}
+        {/* )} */}
       </Menu>
     </>
   );

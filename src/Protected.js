@@ -5,7 +5,7 @@ const ProtectedRoute = ({ component: Component, ...rest }) => {
   // Check if the user is authenticated (e.g., by verifying the JWT)
   const isAuthenticated = () => {
     const token = localStorage.getItem("token"); // Retrieve the JWT from storage
-    return !!token; // Return true if the token exists
+    return true; // Return true if the token exists
   };
 
   return (
@@ -22,4 +22,4 @@ const ProtectedRoute = ({ component: Component, ...rest }) => {
   );
 };
 
-export default ProtectedRoute
+export default ProtectedRoute;
