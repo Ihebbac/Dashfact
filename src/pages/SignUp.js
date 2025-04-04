@@ -148,7 +148,7 @@ const SignUp = () => {
         <div className="layout-default ant-layout layout-sign-up">
           <Header>
             <div className="header-col header-brand">
-              <h5>TN Prime Dashboard</h5>
+              <h3>Stock360 </h3>
             </div>
           </Header>
 
