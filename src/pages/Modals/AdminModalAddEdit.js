@@ -1,342 +1,178 @@
-/* eslint-disable no-useless-concat */
 import {
   Button,
   Card,
-  Checkbox,
   Col,
   Form,
   Input,
-  InputNumber,
-  message,
   Modal,
-  Radio,
   Row,
   Select,
   Spin,
-  Tag,
-  Upload,
+  notification,
+  Radio,
+  Badge,
 } from "antd";
-
 import { useForm } from "antd/lib/form/Form";
 import React, { useEffect, useState } from "react";
-import { notification } from "antd";
 import axios from "axios";
-import {
-  CloudUploadOutlined,
-  MinusCircleOutlined,
-  PlusOutlined,
-  VerticalAlignTopOutlined,
-} from "@ant-design/icons";
-import { isNil } from "lodash";
-import TextArea from "antd/lib/input/TextArea";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+
 const { Option } = Select;
 
 const AddOrUpdateAdmin = (props) => {
-  const { visible, onCancel } = props;
-  const [Loading, setLoading] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState("");
-  const serverURL = "http://127.0.0.1:3000";
-
+  const { visible, onCancel, type, record, refetech } = props;
+  const [loading, setLoading] = useState(false);
   const [form] = useForm();
 
   useEffect(() => {
-    if (props.type === "EDIT") {
+    if (type === "EDIT") {
       form.setFieldsValue({
-        ...props?.record,
+        ...record,
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({
-        images: [],
-      });
     }
-  }, [form, props.record, props.visible]);
+  }, [form, record, visible, type]);
 
-  const handleonfinish = async (val) => {
-    const config = {
-      headers: {
-        authorization: JSON.parse(localStorage.getItem("token")),
-      },
-    };
-
-    let user = JSON.parse(localStorage.getItem("user"));
-    const values = {
-      ...val,
-      id: props.record._id,
-    };
-    console.log("values", values);
-    const img = form.getFieldValue("images");
-    if (props.type === "EDIT") {
-      console.log("edit", values);
-      await axios
-        .put("http://127.0.0.1:3000/users/users/" + values.id, {
-          name: values.name,
-          email: values.email,
-          password: values.password,
-          role: values.role,
-          abilities: values.abilities,
-        })
-        .then((response) => {
-          notification.success({ message: "Update Done  " });
-          props.refetech();
-          onCancel();
-        })
-        .catch(function (err) {
-          props.refetech();
-          onCancel();
-        });
-    } else {
-      console.log("from", form.getFieldValue("data"));
-      await axios
-        .post("http://127.0.0.1:3000/users/users", {
-          name: values.name,
-          email: values.email,
-          password: values.password,
-          role: values.role,
-          abilities: values.abilities,
-        })
-        .then((response) => {
-          console.log("response", response);
-          notification.success({ message: "Admin Crée avec succée " });
-          props.refetech();
-          onCancel();
-        })
-        .catch(function (err) {
-          props.refetech();
-          onCancel();
-        });
+  const handleFinish = async (values) => {
+    setLoading(true);
+    try {
+      if (type === "EDIT") {
+        await axios.put(`http://127.0.0.1:3000/api/user/${record._id}`, values);
+        notification.success({ message: "Utilisateur modifié avec succès" });
+      } else {
+        await axios.post("http://127.0.0.1:3000/api/auth/add", values);
+        notification.success({ message: "Utilisateur créé avec succès" });
+      }
+      refetech();
+      onCancel();
+    } catch (error) {
+      notification.error({
+        message: "Erreur",
+        description: error.response?.data?.message || "Une erreur est survenue",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <Modal
-        visible={previewOpen}
-        //  title={previewTitle}
-        destroyOnClose
-        footer={null}
-        onCancel={() => setPreviewOpen(!previewOpen) && setPreviewImage("")}
+    <Modal
+      title={
+        type === "EDIT" ? "Modifier l'utilisateur" : "Ajouter un utilisateur"
+      }
+      visible={visible}
+      destroyOnClose
+      onOk={() => form.submit()}
+      confirmLoading={loading}
+      onCancel={onCancel}
+      width={800}
+    >
+      <Form
+        form={form}
+        onFinish={handleFinish}
+        layout="vertical"
+        initialValues={{
+          type: "user",
+          status: "active",
+        }}
       >
-        <img
-          alt={previewImage?.name}
-          style={{
-            width: "100%",
-          }}
-          src={previewImage}
-        />
-      </Modal>
-
-      <div className="site-card-border-less-wrapper">
-        <Modal
-          title={props.type === "EDIT" ? "Modifier" : "Ajouter"}
-          visible={visible}
-          destroyOnClose
-          onOk={() => {
-            form.submit();
-          }}
-          width={1000}
-          onCancel={onCancel}
-          className="criclebox "
-        >
-          <Form
-            form={form}
-            onFinish={handleonfinish}
-            preserve={props.type === "EDIT" ? true : false}
-          >
-            <Card
-              centered
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
-              hoverable
-              className="criclebox "
+        <Row gutter={16}>
+          <Col span={24}>
+            <Form.Item
+              name="username"
+              label="Nom d'utilisateur"
+              rules={[
+                {
+                  required: true,
+                  message: "Veuillez saisir le nom d'utilisateur",
+                },
+              ]}
             >
-              <Row justify="space-between" gutter={16}>
-                <Col span={24}>
-                  {Loading ? (
-                    <Row justify="center">
-                      <Spin />
-                    </Row>
-                  ) : (
-                    <Row>
-                      <Col span={24}>
-                        <Form.Item
-                          name="name"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Veuillez entrer le nom d'utilisateur!",
-                            },
-                          ]}
-                        >
-                          <Input placeholder="Nom d'utlisiateur" type="name" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={24}>
-                        <Form.Item
-                          name="email"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Merci de saisir l'Email'!",
-                              type: "email",
-                            },
-                          ]}
-                        >
-                          <Input placeholder="Email" type="Email" />
-                        </Form.Item>
-                      </Col>
+              <Input placeholder="Entrez le nom d'utilisateur" />
+            </Form.Item>
+          </Col>
 
-                      {props.type !== "EDIT" && (
-                        <Col span={24}>
-                          <Form.Item
-                            name="password"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Merci de saisir le mot de pass!",
-                              },
-                            ]}
-                          >
-                            <Input placeholder="new password" type="text" />
-                          </Form.Item>
-                        </Col>
-                      )}
+          <Col span={24}>
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                {
+                  required: true,
+                  type: "email",
+                  message: "Veuillez saisir un email valide",
+                },
+              ]}
+            >
+              <Input placeholder="Entrez l'email" />
+            </Form.Item>
+          </Col>
 
-                      <Col span={24}>
-                        <Form.Item
-                          name="role"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Merci de saisir le role !",
-                            },
-                          ]}
-                        >
-                          <Input placeholder="role" type="text" />
-                        </Form.Item>
-                      </Col>
+          {type !== "EDIT" && (
+            <Col span={24}>
+              <Form.Item
+                name="password"
+                label="Mot de passe"
+                rules={[
+                  {
+                    required: true,
+                    message: "Veuillez saisir un mot de passe",
+                  },
+                  {
+                    min: 6,
+                    message:
+                      "Le mot de passe doit contenir au moins 6 caractères",
+                  },
+                ]}
+              >
+                <Input.Password placeholder="Entrez le mot de passe" />
+              </Form.Item>
+            </Col>
+          )}
 
-                      <Col span={24}>
-                        <Form.List name="abilities">
-                          {(fields, { add, remove }) => (
-                            <>
-                              {fields.map(({ key, name, ...restField }) => (
-                                <>
-                                  <Row>
-                                    <Col span={12} style={{ marginRight: 10 }}>
-                                      <Form.Item
-                                        {...restField}
-                                        name={[name, "page"]}
-                                        rules={[
-                                          {
-                                            required: true,
-                                            message: "Missing Page",
-                                          },
-                                        ]}
-                                      >
-                                        <Select
-                                          placeholder="can"
-                                          options={[
-                                            {
-                                              label: "dashboard",
-                                              value: "dashboard",
-                                            },
-                                            {
-                                              label: "categorie",
-                                              value: "categorie",
-                                            },
-                                            {
-                                              label: "produit",
-                                              value: "produit",
-                                            },
-                                            {
-                                              label: "orders",
-                                              value: "orders",
-                                            },
-                                            {
-                                              label: "admins",
-                                              value: "admins",
-                                            },
-                                          ]}
-                                        />
-                                      </Form.Item>
-                                    </Col>
+          <Col span={12}>
+            <Form.Item
+              name="type"
+              label="Type d'utilisateur"
+              rules={[
+                {
+                  required: true,
+                  message: "Veuillez sélectionner le type",
+                },
+              ]}
+            >
+              <Select>
+                <Option value="user">Utilisateur standard</Option>
+                <Option value="admin">Administrateur</Option>
+              </Select>
+            </Form.Item>
+          </Col>
 
-                                    <Col span={12} style={{ marginRight: 10 }}>
-                                      <Form.Item
-                                        {...restField}
-                                        name={[name, "can"]}
-                                        rules={[
-                                          {
-                                            required: true,
-                                            message: "Missing abilities",
-                                          },
-                                        ]}
-                                      >
-                                        <Select
-                                          placeholder="can"
-                                          mode="multiple"
-                                          options={[
-                                            { label: "create", value: "create" },
-                                            { label: "read", value: "read" },
-                                            {
-                                              label: "delete",
-                                              value: "delete",
-                                            },
-                                            {
-                                              label: "edit",
-                                              value: "edit",
-                                            },
-                                          ]}
-                                        />
-                                      </Form.Item>
-                                    </Col>
-                                  </Row>
-
-                                  <Row>
-                                    <Col
-                                      span={6}
-                                      style={{ marginRight: 25, marginTop: 10 }}
-                                    >
-                                      <MinusCircleOutlined
-                                        onClick={() => remove(name)}
-                                        style={{
-                                          marginLeft: 40,
-                                          marginTop: 10,
-                                        }}
-                                      />
-                                    </Col>
-                                  </Row>
-
-                                  <hr></hr>
-                                </>
-                              ))}
-                              <Form.Item>
-                                <Button
-                                  type="dashed"
-                                  onClick={() => add()}
-                                  block
-                                  icon={<PlusOutlined />}
-                                >
-                                  Ajouter une Option
-                                </Button>
-                              </Form.Item>
-                            </>
-                          )}
-                        </Form.List>
-                      </Col>
-                    </Row>
-                  )}
-                </Col>
-              </Row>
-            </Card>
-          </Form>
-        </Modal>
-      </div>
-    </>
+          <Col span={12}>
+            <Form.Item
+              name="status"
+              label="Statut"
+              rules={[
+                {
+                  required: true,
+                  message: "Veuillez sélectionner le statut",
+                },
+              ]}
+            >
+              <Radio.Group>
+                <Radio value="active">
+                  <Badge status="success" text="Actif" />
+                </Radio>
+                <Radio value="inactive">
+                  <Badge status="error" text="Inactif" />
+                </Radio>
+              </Radio.Group>
+            </Form.Item>
+          </Col>
+        </Row>
+      </Form>
+    </Modal>
   );
 };
 
