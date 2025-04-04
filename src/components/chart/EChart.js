@@ -1,87 +1,186 @@
-/*!
-  =========================================================
-  * Muse Ant Design Dashboard - v1.0.0
-  =========================================================
-  * Product Page: https://www.creative-tim.com/product/muse-ant-design-dashboard
-  * Copyright 2021 Creative Tim (https://www.creative-tim.com)
-  * Licensed under MIT (https://github.com/creativetimofficial/muse-ant-design-dashboard/blob/main/LICENSE.md)
-  * Coded by Creative Tim
-  =========================================================
-  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
+import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
-import { Row, Col, Typography } from "antd";
-import eChart from "./configs/eChart";
+import { Typography } from "antd";
 import moment from "moment";
-function EChart({ data }) {
-  const { Title, Paragraph } = Typography;
 
-  const items = [
-    {
-      Title: "3,6K",
-      user: "Users",
+const { Title, Paragraph } = Typography;
+
+function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
+  const [chartOptions, setChartOptions] = useState({
+    series: [],
+    options: {
+      chart: {
+        type: "bar",
+        height: 350,
+        toolbar: {
+          show: true,
+        },
+      },
+      plotOptions: {
+        bar: {
+          borderRadius: 4,
+          horizontal: false,
+          columnWidth: "55%",
+        },
+      },
+      dataLabels: {
+        enabled: false,
+      },
+      stroke: {
+        show: true,
+        width: 2,
+        colors: ["transparent"],
+      },
+      xaxis: {
+        type: "category",
+      },
+      yaxis: {
+        title: {
+          text: "Montant (TND)",
+        },
+      },
+      title: {
+        text: "Analyse des Factures",
+        align: "left",
+      },
+      colors: ["#1890ff", "#52c41a"],
+      tooltip: {
+        y: {
+          formatter: function (val) {
+            return val.toFixed(2) + " TND";
+          },
+        },
+      },
     },
-    {
-      Title: "2m",
-      user: "Clicks",
-    },
-    {
-      Title: "$772",
-      user: "Sales",
-    },
-    {
-      Title: "82",
-      user: "Items",
-    },
-  ];
+  });
 
-  // 1. Define month names in correct order
-  function processOrders(orders) {
-    const monthlyData = {};
+  useEffect(() => {
+    if (!invoices || invoices.length === 0) return;
 
-    orders.forEach((order) => {
-      const date = moment(order.orderDate);
-      if (!date.isValid()) return;
+    const processData = () => {
+      try {
+        // Filtrer par année si spécifiée
+        const filteredInvoices = yearFilter
+          ? invoices.filter((inv) => moment(inv.date).year() === yearFilter)
+          : invoices;
 
-      const year = date.year();
-      const monthName = `${date.format("MMMM")} ${year}`;
-      const sortKey = date.format("YYYY-MM");
+        if (viewMode === "monthly") {
+          // Vue monthlyle
+          const months = [
+            "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+            "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+          ];
+          const monthlyData = months.map((month, index) => {
+            const monthInvoices = filteredInvoices.filter(
+              (inv) => moment(inv.date).month() === index
+            );
 
-      monthlyData[sortKey] = {
-        display: monthName,
-        total: (monthlyData[sortKey]?.total || 0) + order.totalPrice,
-        sortValue: date.valueOf(), // Timestamp for sorting
-      };
-    });
+            const total = monthInvoices.reduce(
+              (sum, inv) => sum + inv.total,
+              0
+            );
+            const count = monthInvoices.length;
 
-    return monthlyData;
-  }
+            return {
+              month: month.substring(0, 3), // Nom court du mois
+              total: parseFloat(total.toFixed(2)),
+              count,
+            };
+          });
 
-  function updateChart(orders) {
-    const monthlyData = processOrders(orders);
+          return {
+            categories: monthlyData.map((d) => d.month),
+            series: [
+              {
+                name: "Montant Total",
+                data: monthlyData.map((d) => d.total),
+              },
+              {
+                name: "Nombre de Factures",
+                data: monthlyData.map((d) => d.count),
+              },
+            ],
+          };
+        } else if (viewMode === "yearly") {
+          // Comparaison yearlyle
+          const years = [
+            ...new Set(invoices.map((inv) => moment(inv.date).year())),
+          ].sort();
 
-    const sortedEntries = Object.entries(monthlyData).sort(
-      (a, b) => a[1].sortValue - b[1].sortValue
-    );
+          const yearlyData = years.map((year) => {
+            const yearInvoices = invoices.filter(
+              (inv) => moment(inv.date).year() === year
+            );
 
-    eChart.series[0].data = sortedEntries.map((entry) => entry[1].total);
-  }
+            const total = yearInvoices.reduce((sum, inv) => sum + inv.total, 0);
+            const count = yearInvoices.length;
 
-  updateChart(data.filter((el) => el.status === "valide"));
+            return {
+              year: year.toString(),
+              total: parseFloat(total.toFixed(2)),
+              count,
+            };
+          });
+
+          return {
+            categories: yearlyData?.map((d) => d.year),
+            series: [
+              {
+                name: "Montant Total",
+                data: yearlyData.map((d) => d.total),
+              },
+              {
+                name: "Nombre de Factures",
+                data: yearlyData.map((d) => d.count),
+              },
+            ],
+          };
+        }
+      } catch (error) {
+        console.error("Erreur de traitement des données:", error);
+        return { categories: [], series: [] };
+      }
+    };
+
+    const { categories, series } = processData();
+
+    setChartOptions((prev) => ({
+      ...prev,
+      series: series ?? [],
+      options: {
+        ...prev.options,
+        chart: {
+          ...prev.options.chart,
+          type: viewMode === "yearly" ? "bar" : "bar",
+        },
+        xaxis: {
+          ...prev.options.xaxis,
+          categories: categories ?? [],
+        },
+        title: {
+          ...prev.options.title,
+          text:
+            viewMode === "yearly"
+              ? `Comparaison yearlyle des Factures ${
+                  yearFilter ? `(Filtré: ${yearFilter})` : ""
+                }`
+              : `Analyse monthlyle des Factures ${
+                  yearFilter ? `(Année: ${yearFilter})` : ""
+                }`,
+        },
+      },
+    }));
+  }, [invoices, viewMode, yearFilter]);
 
   return (
-    <>
-      <div id="chart">
-        <ReactApexChart
-          className="bar-chart"
-          options={eChart.options}
-          series={eChart.series}
-          type="bar"
-          height={400}
-        />
-      </div>
-    </>
+    <div id="chart">
+      <ReactApexChart
+        options={chartOptions.options}
+        series={chartOptions.series}
+        type={chartOptions.options.chart.type}
+        height={400}
+      />
+    </div>
   );
 }
 
