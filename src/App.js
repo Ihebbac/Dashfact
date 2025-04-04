@@ -17,6 +17,7 @@ import Check from "./pages/check";
 import Admins from "./pages/Admins";
 import Collections from "./pages/collections";
 import ProtectedRoute from "./Protected"; // Import the ProtectedRoute component
+import Invoice from "./pages/Invoice";
 
 function App() {
   return (
@@ -34,6 +35,8 @@ function App() {
           <ProtectedRoute exact path="/Check" component={Check} />
           <ProtectedRoute exact path="/customers" component={Customers} />
           <ProtectedRoute exact path="/produit" component={Produit} />
+          <ProtectedRoute exact path="/Invoice" component={Invoice} />
+    
           <ProtectedRoute exact path="/billing" component={Billing} />
           <ProtectedRoute exact path="/rtl" component={Rtl} />
           <ProtectedRoute exact path="/profile" component={Profile} />
