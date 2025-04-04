@@ -15,26 +15,32 @@ import axios from "axios";
 const { Text } = Typography;
 
 const ClientModalAddEdit = (props) => {
-  const { visible, onCancel, type, record, refetch } = props;
+  const { visible, onCancel, action, record, refetch } = props;
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
+  // Initialize form with record data when modal opens
   useEffect(() => {
     if (visible) {
-      if (type === "EDIT" && record) {
+      if (action === "EDIT" && record) {
         form.setFieldsValue({
-          ...record,
+          nom: record.nom,
+          adresse: record.adresse,
+          telephone: record.telephone,
+          email: record.email,
+          notes: record.notes,
         });
       } else {
+        // Reset form for new client
         form.resetFields();
       }
     }
-  }, [visible, record]);
+  }, [visible, record, action, form]);
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      if (type === "EDIT") {
+      if (action === "EDIT") {
         await axios.put(`http://127.0.0.1:3000/clients/${record._id}`, values);
         message.success("Client mis à jour avec succès");
       } else {
@@ -54,13 +60,13 @@ const ClientModalAddEdit = (props) => {
 
   return (
     <Modal
-      title={type === "EDIT" ? "MODIFIER LE CLIENT" : "AJOUTER UN NOUVEAU CLIENT"}
+      title={action === "EDIT" ? "MODIFIER LE CLIENT" : "AJOUTER UN NOUVEAU CLIENT"}
       visible={visible}
       width={700}
       onCancel={onCancel}
       onOk={() => form.submit()}
       confirmLoading={loading}
-      okText={type === "EDIT" ? "Mettre à jour" : "Créer"}
+      okText={action === "EDIT" ? "Mettre à jour" : "Créer"}
       cancelText="Annuler"
       destroyOnClose
     >
