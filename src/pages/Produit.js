@@ -11,6 +11,9 @@ import {
   Input,
   notification,
   Badge,
+  Tag,
+  Divider,
+  Progress,
 } from "antd";
 import {
   DeleteTwoTone,
@@ -24,12 +27,14 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import _ from "lodash";
 import ProduitModalAddEdit from "./Modals/ProduitModalAddEdit";
+import Text from "antd/lib/typography/Text";
 
 const { confirm } = Modal;
 
 const Produit = () => {
   const [data, setData] = useState([]);
   const [filterData, setfilterData] = useState([]);
+  const [magasins, setMagasins] = useState([]);
   const [visible, setVisible] = useState(false);
   const [action, setAction] = useState("");
   const [search, setSearch] = useState("");
@@ -59,6 +64,11 @@ const Produit = () => {
         notification.error({ message: "No Data Found" });
       }
     });
+
+    axios
+      .get("http://127.0.0.1:3000/magasins")
+      .then((response) => setMagasins(response.data))
+      .catch((err) => console.error("Error loading stores:", err));
   };
 
   const handrefetech = () => {
@@ -139,10 +149,11 @@ const Produit = () => {
       fetchData();
       return;
     }
-    
-    const filtered = data.filter(item => 
-      item.nom.toLowerCase().includes(search.toLowerCase()) || 
-      item.reference.toLowerCase().includes(search.toLowerCase())
+
+    const filtered = data.filter(
+      (item) =>
+        item.nom.toLowerCase().includes(search.toLowerCase()) ||
+        item.reference.toLowerCase().includes(search.toLowerCase())
     );
     setfilterData(filtered);
   };
@@ -150,17 +161,21 @@ const Produit = () => {
   const handleExcelImport = async (options) => {
     const { file } = options;
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append("file", file);
+
     setFileUploading(true);
-    
+
     try {
-      const response = await axios.post('http://127.0.0.1:3000/stock/import', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const response = await axios.post(
+        "http://127.0.0.1:3000/stock/import",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
-      
+      );
+
       message.success(`${file.name} importé avec succès`);
       handrefetech();
     } catch (error) {
@@ -190,7 +205,7 @@ const Produit = () => {
                     onPressEnter={handleSearch}
                     suffix={<SearchOutlined onClick={handleSearch} />}
                   />
-                  
+
                   <Button
                     style={{ marginRight: 25 }}
                     type="primary"
@@ -202,15 +217,15 @@ const Produit = () => {
                   >
                     Ajouter un produit
                   </Button>
-                  
+
                   <Upload
                     accept=".xlsx,.xls,.csv"
                     customRequest={handleExcelImport}
                     showUploadList={false}
                     disabled={fileUploading}
                   >
-                    <Button 
-                      type="primary" 
+                    <Button
+                      type="primary"
                       icon={<UploadOutlined />}
                       loading={fileUploading}
                     >
@@ -231,7 +246,7 @@ const Produit = () => {
             </Card>
           </Col>
         </Row>
-        
+
         <ProduitModalAddEdit
           visible={visible}
           record={action === "EDIT" ? record : {}}
@@ -239,7 +254,7 @@ const Produit = () => {
           type={action}
           onCancel={() => setVisible(false)}
         />
-        
+
         <Modal
           visible={show}
           destroyOnClose
@@ -253,11 +268,95 @@ const Produit = () => {
                 <Row>
                   <Col span={12}>
                     <h3>Détails du produit</h3>
-                    <p><strong>Référence:</strong> {record.reference}</p>
-                    <p><strong>Nom:</strong> {record.nom}</p>
-                    {record.description && <p><strong>Description:</strong> {record.description}</p>}
+                    <p>
+                      <strong>Référence:</strong> {record.reference}
+                    </p>
+                    <p>
+                      <strong>Nom:</strong> {record.nom}
+                    </p>
+                    {record?.description && (
+                      <p>
+                        <strong>Description:</strong> {record.description}
+                      </p>
+                    )}
                   </Col>
                 </Row>
+
+                <Card
+                  title="Stock par Magasin"
+                  style={{ marginTop: 16 }}
+                  bordered={false}
+                >
+                  {record?.quantite?.map((el, index) => {
+                    const magasin = magasins.find(
+                      (elm) => elm._id === el.magasinId
+                    );
+                    const availableStock =
+                      el.quantiteInitiale - el.quantiteVendue;
+                    const stockPercentage =
+                      (availableStock / el.quantiteInitiale) * 100;
+
+                    return (
+                      <div key={index} style={{ marginBottom: 16 }}>
+                        <Row gutter={16} align="middle">
+                          <Col span={8}>
+                            <Text strong>Magasin:</Text>
+                            <Text style={{ marginLeft: 8 }}>
+                              {magasin?.nom || "Inconnu"}
+                            </Text>
+                          </Col>
+
+                          <Col span={8}>
+                            <Text strong>Stock disponible:</Text>
+                            <Badge
+                              count={availableStock}
+                              style={{
+                                backgroundColor:
+                                  availableStock > 0 ? "#52c41a" : "#f5222d",
+                                marginLeft: 8,
+                              }}
+                            />
+                          </Col>
+
+                          <Col span={8}>
+                            <Progress
+                              percent={stockPercentage}
+                              status={
+                                stockPercentage > 50
+                                  ? "success"
+                                  : stockPercentage > 20
+                                  ? "normal"
+                                  : "exception"
+                              }
+                              showInfo={false}
+                            />
+                          </Col>
+                        </Row>
+
+                        <Row gutter={16} style={{ marginTop: 8 }}>
+                          <Col span={12}>
+                            <Text type="secondary">
+                              Initial: {el.quantiteInitiale} | Vendu:{" "}
+                              {el.quantiteVendue}
+                            </Text>
+                          </Col>
+                          <Col span={12}>
+                            {availableStock <= 0 && (
+                              <Tag color="red">RUPTURE DE STOCK</Tag>
+                            )}
+                            {availableStock > 0 && availableStock <= 5 && (
+                              <Tag color="orange">STOCK FAIBLE</Tag>
+                            )}
+                          </Col>
+                        </Row>
+
+                        {index < record.quantite.length - 1 && (
+                          <Divider style={{ margin: "12px 0" }} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </Card>
               </Card>
             </Badge.Ribbon>
           )}

@@ -135,7 +135,7 @@ const Invoice = () => {
       title: "Total",
       dataIndex: "total",
       key: "total",
-      render: (total) => `${total.toFixed(2)} €`,
+      render: (total) => `${total.toFixed(2)} TND`,
     },
     {
       title: "Statut",
@@ -180,7 +180,7 @@ const Invoice = () => {
               <Button
                 type="primary"
                 danger
-                onClick={() => showPromiseConfirm(record, record.id)}
+                onClick={() => showPromiseConfirm(record, record._id)}
               >
                 <DeleteTwoTone twoToneColor="#FFFFFF" />
               </Button>
@@ -315,8 +315,8 @@ const Invoice = () => {
                       { title: "Nom", dataIndex: "nom", key: "nom" },
                       { title: "Taille", dataIndex: "taille", key: "taille" },
                       { title: "Quantité", dataIndex: "quantity", key: "quantity" },
-                      { title: "Prix unitaire", dataIndex: "prixVente", key: "prixVente", render: (val) => `${val.toFixed(2)} €` },
-                      { title: "Total", key: "total", render: (_, item) => `${(item.quantity * item.prixVente).toFixed(2)} €` },
+                      { title: "Prix unitaire", dataIndex: "prixVente", key: "prixVente", render: (val) => `${val.toFixed(2)} TND` },
+                      { title: "Total", key: "total", render: (_, item) => `${(item.quantity * item.prixVente).toFixed(2)} TND` },
                     ]}
                     dataSource={record.items}
                     pagination={false}
@@ -331,19 +331,19 @@ const Invoice = () => {
                       <Text strong>Sous-total: </Text>
                     </Col>
                     <Col span={6}>
-                      <Text>{record.subtotal.toFixed(2)} €</Text>
+                      <Text>{record.subtotal.toFixed(2)} TND</Text>
                     </Col>
                     <Col span={6}>
                       <Text strong>Taxe: </Text>
                     </Col>
                     <Col span={6}>
-                      <Text>{record.tax.toFixed(2)} €</Text>
+                      <Text>{record.tax.toFixed(2)} TND</Text>
                     </Col>
                     <Col span={6}>
                       <Text strong>Total: </Text>
                     </Col>
                     <Col span={6}>
-                      <Text>{record.total.toFixed(2)} €</Text>
+                      <Text>{record.total.toFixed(2)} TND</Text>
                     </Col>
                   </Row>
                 </Col>
