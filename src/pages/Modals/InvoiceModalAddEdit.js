@@ -221,13 +221,13 @@ const InvoiceModalAddEdit = ({
       title: "Prix",
       dataIndex: "prixVente",
       key: "prixVente",
-      render: (value) => `${value.toFixed(2)} €`,
+      render: (value) => `${value.toFixed(2)} TND`,
     },
     {
       title: "Total",
       key: "total",
       render: (_, record) =>
-        `${(record.quantity * record.prixVente).toFixed(2)} €`,
+        `${(record.quantity * record.prixVente).toFixed(2)} TND`,
     },
     {
       title: "Action",
@@ -361,15 +361,15 @@ const InvoiceModalAddEdit = ({
             <Space direction="vertical" size="middle">
               <div>
                 <span style={{ marginRight: 16 }}>Sous-total:</span>
-                <span>{subtotal.toFixed(2)} €</span>
+                <span>{subtotal.toFixed(2)} TND</span>
               </div>
               <div>
                 <span style={{ marginRight: 16 }}>Taxe (20%):</span>
-                <span>{tax.toFixed(2)} €</span>
+                <span>{tax.toFixed(2)} TND</span>
               </div>
               <div>
                 <span style={{ marginRight: 16 }}>Total:</span>
-                <span>{total.toFixed(2)} €</span>
+                <span>{total.toFixed(2)} TND</span>
               </div>
             </Space>
           </Col>
