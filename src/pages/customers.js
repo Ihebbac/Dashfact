@@ -141,7 +141,7 @@ const Customers = () => {
         console.log("Success delete ", dataDelete);
         setisload(true);
         await axios
-          .delete(`http://127.0.0.1:3000/api/v1/customers/${alldata.id}`)
+          .delete(`http://127.0.0.1:3000/customers/${alldata.id}`)
           .then(function (response) {
             handrefetech();
             setisload(false);
@@ -268,7 +268,7 @@ const Customers = () => {
   ];
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:3000/api/v1/customers").then((response) => {
+    axios.get("http://127.0.0.1:3000/customers").then((response) => {
       console.log("response", response);
       if (response.data.data) {
         setData(response.data.data);
@@ -283,7 +283,7 @@ const Customers = () => {
     setisload(true);
     console.log("valuesssssss", values);
     // const res = await axios
-    // .post(`http://127.0.0.1:3000/api/v1/categories/${values}`)
+    // .post(`http://127.0.0.1:3000/categories/${values}`)
     // .then(function (response) {
     //   // handrefetech();
     //   setisload(false);

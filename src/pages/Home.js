@@ -62,7 +62,7 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:3000/api/v1/orders")
+      .get("http://127.0.0.1:3000/orders")
       .then((response) => {
         console.log("response", response);
         if (response.data.data) {
@@ -78,7 +78,7 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://127.0.0.1:3000/api/v1/customers")
+      .get("http://127.0.0.1:3000/customers")
       .then((response) => {
         if (response.data.data) {
           setcustom(response.data.data);

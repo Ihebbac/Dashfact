@@ -112,7 +112,7 @@ const CollectionModalAddEdit = (props) => {
     const img = form.getFieldValue("images");
     if (props.type === "EDIT") {
       await axios
-        .put("http://127.0.0.1:3000/api/v1/collection/" + values.id, {
+        .put("http://127.0.0.1:3000/collection/" + values.id, {
           name: values?.name,
           description: values?.description,
           thumbnailImage: img[0],
@@ -129,7 +129,7 @@ const CollectionModalAddEdit = (props) => {
     } else {
       console.log("from", form.getFieldValue("data"));
       await axios
-        .post("http://127.0.0.1:3000/api/v1/collection", {
+        .post("http://127.0.0.1:3000/collection", {
           name: values?.name,
           description: values?.description,
           thumbnailImage: img[0],

@@ -125,7 +125,7 @@ const SignUp = () => {
       console.log("Success:", values);
       try {
         const {email, password} = values
-        const response = await axios.post("http://127.0.0.1:3000/api/v1/users/users/login", { email, password });
+        const response = await axios.post("http://127.0.0.1:3000/users/users/login", { email, password });
         const { token,user } = response.data;
   
         // Store the JWT in localStorage

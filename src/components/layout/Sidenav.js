@@ -226,7 +226,7 @@ function Sidenav({ color }) {
 
         {/* // {pageList?.includes("orders") && ( */}
           <Menu.Item key="22">
-            <NavLink to="/facture">
+            <NavLink to="/Check">
               <span
                 className="icon"
                 style={{
@@ -235,7 +235,7 @@ function Sidenav({ color }) {
               >
                 {tables}
               </span>
-              <span className="label">Factures</span>
+              <span className="label">Check</span>
             </NavLink>
           </Menu.Item>
         {/* )} */}

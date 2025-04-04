@@ -13,7 +13,7 @@ import Main from "./components/layout/Main";
 import "antd/dist/antd.css";
 import "./assets/styles/main.css";
 import "./assets/styles/responsive.css";
-import Orders from "./pages/orders";
+import Check from "./pages/check";
 import Admins from "./pages/Admins";
 import Collections from "./pages/collections";
 import ProtectedRoute from "./Protected"; // Import the ProtectedRoute component
@@ -31,7 +31,7 @@ function App() {
           <ProtectedRoute exact path="/admins" component={Admins} />
          
           <ProtectedRoute exact path="/collections" component={Collections} />
-          <ProtectedRoute exact path="/facture" component={Orders} />
+          <ProtectedRoute exact path="/Check" component={Check} />
           <ProtectedRoute exact path="/customers" component={Customers} />
           <ProtectedRoute exact path="/produit" component={Produit} />
           <ProtectedRoute exact path="/billing" component={Billing} />

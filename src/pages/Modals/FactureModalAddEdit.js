@@ -48,7 +48,7 @@ import {
   
     useEffect(() => {
       axios
-        .get("http://127.0.0.1:3000/api/v1/categories")
+        .get("http://127.0.0.1:3000/categories")
         .then((response) => {
           console.log("response", response);
           if (response.data.data) {
@@ -59,7 +59,7 @@ import {
         });
   
       axios
-        .get("http://127.0.0.1:3000/api/v1/collection")
+        .get("http://127.0.0.1:3000/collection")
         .then((response) => {
           console.log("response", response);
           if (response.data.data) {
@@ -180,7 +180,7 @@ import {
       }));
       if (props.type === "EDIT") {
         await axios
-          .put("http://127.0.0.1:3000/api/v1/products/" + values.id, {
+          .put("http://127.0.0.1:3000/products/" + values.id, {
             name: values.name,
             description: values.description,
             detail: values.detail,
@@ -199,7 +199,7 @@ import {
           });
       } else {
         await axios
-          .post("http://127.0.0.1:3000/api/v1/products", {
+          .post("http://127.0.0.1:3000/products", {
             name: values.name,
             description: values.description,
             detail: values.detail,

@@ -263,7 +263,7 @@ const Produit = () => {
 
   const handelrecherche = () => {
     axios
-      .get("http://127.0.0.1:3000/api/v1/products/search?q=" + search)
+      .get("http://127.0.0.1:3000/products/search?q=" + search)
       .then((response) => {
         console.log("response", response);
         if (response.data.data) {
