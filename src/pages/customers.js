@@ -209,6 +209,7 @@ const Customers = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onPressEnter={handleSearch}
+                    
                   />
                   
                   <Button
