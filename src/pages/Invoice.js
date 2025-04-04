@@ -180,7 +180,7 @@ const Invoice = () => {
               <Button
                 type="primary"
                 danger
-                onClick={() => showPromiseConfirm(record, record.id)}
+                onClick={() => showPromiseConfirm(record, record._id)}
               >
                 <DeleteTwoTone twoToneColor="#FFFFFF" />
               </Button>
