@@ -1,142 +1,52 @@
-/* eslint-disable array-callback-return */
-/*!
-=========================================================
-* Muse Ant Design Dashboard - v1.0.0
-=========================================================
-* Product Page: https://www.creative-tim.com/product/muse-ant-design-dashboard
-* Copyright 2021 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/muse-ant-design-dashboard/blob/main/LICENSE.md)
-* Coded by Creative Tim
-=========================================================
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 import {
   Row,
   Col,
   Card,
-  Radio,
   Table,
   Upload,
   message,
-  Progress,
   Button,
-  Avatar,
   Typography,
   Modal,
-  Form,
   Input,
   notification,
-  Image,
-  Space,
-  Tag,
-  Carousel,
   Badge,
-  Select,
 } from "antd";
 import {
   DeleteTwoTone,
   EditTwoTone,
   InfoCircleOutlined,
-  PlusOutlined,
   ExclamationCircleOutlined,
-  UsergroupAddOutlined,
-  CloseCircleTwoTone,
-  PlusCircleTwoTone,
-  UserOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  AppstoreAddOutlined,
   SearchOutlined,
+  UploadOutlined,
 } from "@ant-design/icons";
-import { ToTopOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
-import React, { Component, useEffect, useRef, useState } from "react";
-
-// Images
-import ava1 from "../assets/images/logo-shopify.svg";
-import ava2 from "../assets/images/logo-atlassian.svg";
-import ava3 from "../assets/images/logo-slack.svg";
-import ava5 from "../assets/images/logo-jira.svg";
-import ava6 from "../assets/images/logo-invision.svg";
-import face from "../assets/images/face-1.jpg";
-import face2 from "../assets/images/face-2.jpg";
-import face3 from "../assets/images/face-3.jpg";
-import face4 from "../assets/images/face-4.jpg";
-import face5 from "../assets/images/face-5.jpeg";
-import face6 from "../assets/images/face-6.jpeg";
-import pencil from "../assets/images/pencil.svg";
-import ProduitModalAddEdit from "./Modals/ProduitModalAddEdit";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { CirclePicker } from "react-color";
-import datetime from "moment";
 import _ from "lodash";
-import ProduitModalAddEditWithoutexcel from "./Modals/ProduitModalAddEditWithoutexcel";
-const { Title } = Typography;
+import ProduitModalAddEdit from "./Modals/ProduitModalAddEdit";
+
 const { confirm } = Modal;
-const formProps = {
-  name: "file",
-  action: "https://www.mocky.io/v2/5cc8019d300000980a055e76",
-  headers: {
-    authorization: "authorization-text",
-  },
-  onChange(info) {
-    if (info.file.status !== "uploading") {
-      console.log(info.file, info.fileList);
-    }
-    if (info.file.status === "done") {
-      message.success(`${info.file.name} file uploaded successfully`);
-    } else if (info.file.status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
-};
-// table code start
-const getBase64 = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
 
 const Produit = () => {
-  const onChange = (e) => console.log(`radio checked:${e.target.value}`);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState("");
-  const [previewTitle, setPreviewTitle] = useState("");
-  const [optionColor, setoptionColor] = useState("");
-  const [fileList, setFileList] = useState([
-    // {
-    //   uid: '-1',
-    //   name: 'image.png',
-    //   status: 'done',
-    //   url: 'https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png',
-    // },
-  ]);
-  const [Nom, setNom] = useState("");
-  const [description, setdescription] = useState("");
-  const [ThumbnailImage, setThumbnailImage] = useState("");
-
-  const [createdAt, setcreatedAt] = useState("");
-  const [updatedAt, setupdatedAt] = useState("");
-  const [isModalCat, setIsModalCat] = useState(false);
   const [data, setData] = useState([]);
   const [filterData, setfilterData] = useState([]);
-
   const [visible, setVisible] = useState(false);
-  const [visiblewithoutexcel, setVisiblewithoutexcel] = useState(false);
   const [action, setAction] = useState("");
   const [search, setSearch] = useState("");
   const [record, setrecord] = useState(null);
-  const [recordOption, setrecordOption] = useState(null);
   const [refetech, setrefetech] = useState(false);
   const [show, setshow] = useState(false);
+  const [fileUploading, setFileUploading] = useState(false);
 
   const abilities = JSON.parse(localStorage.getItem("user"))?.abilities?.find(
     (el) => el.page === "produit"
   )?.can;
 
   useEffect(() => {
+    fetchData();
+  }, [refetech]);
+
+  const fetchData = () => {
     axios.get("http://127.0.0.1:3000/stock").then((response) => {
       if (response.data) {
         setSearch("");
@@ -149,7 +59,7 @@ const Produit = () => {
         notification.error({ message: "No Data Found" });
       }
     });
-  }, [refetech]);
+  };
 
   const handrefetech = () => {
     setrefetech(!refetech);
@@ -170,53 +80,25 @@ const Produit = () => {
       onCancel() {},
     });
   };
-  const showModalCat = () => {
-    setIsModalCat(true);
-  };
 
   const columns = [
     {
-      title: "reference",
+      title: "Référence",
       dataIndex: "reference",
       key: "reference",
     },
-
     {
       title: "Nom",
       dataIndex: "nom",
       key: "nom",
     },
-
-    // {
-    //   title: "Déscription",
-    //   key: "description",
-    //   dataIndex: "description",
-    //   with: 100,
-    //   ellipsis: true,
-    //   // render: (text) => <div className="text-truncate">{text}</div>,
-    // },
-
-    // {
-    //   title: "createdAt",
-    //   key: "createdAt",
-    //   dataIndex: "createdAt",
-    //   render: (x) => {
-    //     const dateObject = datetime(x);
-
-    //     const formattedDate = dateObject.format("DD/MM/YYYY");
-    //     return <time>{formattedDate}</time>;
-    //   },
-    // },
-
     {
-      title: "Action",
+      title: "Actions",
       key: "action",
       render: (_, record) => (
         <div className="action-buttons">
           <Row>
-            {/* {abilities.includes("edit") && ( */}
             <Col span={8} className="ms-2">
-              {" "}
               <Button
                 onClick={() => {
                   setVisible(true);
@@ -227,11 +109,7 @@ const Produit = () => {
                 <EditTwoTone />
               </Button>
             </Col>
-            {/* // )} */}
-
-            {/* {abilities.includes("read") && ( */}
             <Col span={8} className="ms-2">
-              {" "}
               <Button
                 onClick={() => {
                   setshow(true);
@@ -241,11 +119,7 @@ const Produit = () => {
                 <InfoCircleOutlined />
               </Button>
             </Col>
-            {/* )}
-
-            {abilities.includes("delete") && ( */}
             <Col span={8}>
-              {" "}
               <Button
                 type="primary"
                 danger
@@ -254,29 +128,51 @@ const Produit = () => {
                 <DeleteTwoTone twoToneColor="#FFFFFF" />
               </Button>
             </Col>
-            {/* )} */}
           </Row>
         </div>
       ),
     },
   ];
 
-  const handelrecherche = () => {
-    axios
-      .get("http://127.0.0.1:3000/api/v1/products/search?q=" + search)
-      .then((response) => {
-        console.log("response", response);
-        if (response.data.data) {
-          setData(response.data.data);
-        } else {
-          notification.error({ message: "No Data Found" });
+  const handleSearch = () => {
+    if (!search) {
+      fetchData();
+      return;
+    }
+    
+    const filtered = data.filter(item => 
+      item.nom.toLowerCase().includes(search.toLowerCase()) || 
+      item.reference.toLowerCase().includes(search.toLowerCase())
+    );
+    setfilterData(filtered);
+  };
+
+  const handleExcelImport = async (options) => {
+    const { file } = options;
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setFileUploading(true);
+    
+    try {
+      const response = await axios.post('http://127.0.0.1:3000/stock/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
       });
+      
+      message.success(`${file.name} importé avec succès`);
+      handrefetech();
+    } catch (error) {
+      message.error(`Échec de l'importation de ${file.name}: ${error.message}`);
+    } finally {
+      setFileUploading(false);
+    }
   };
 
   return (
     <>
-      <h1>Produit</h1>
+      <h1>Produits</h1>
       <div className="tabled">
         <Row gutter={[24, 0]}>
           <Col xs="24" xl={24}>
@@ -285,25 +181,16 @@ const Produit = () => {
               className="criclebox tablespace mb-24"
               title="Liste des produits"
               extra={
-                <div className="d-flex ">
+                <div className="d-flex">
                   <Input
-                    style={{ marginRight: 25 }}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                    }}
+                    placeholder="Rechercher par nom ou référence"
+                    style={{ marginRight: 25, width: 200 }}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onPressEnter={handleSearch}
+                    suffix={<SearchOutlined onClick={handleSearch} />}
                   />
-
-                  <Button
-                    style={{ marginRight: 25 }}
-                    onClick={() => {
-                      handelrecherche();
-                    }}
-                  >
-                    {" "}
-                    Rechercher
-                  </Button>
-
-                  {/* {abilities.includes("create") && ( */}
+                  
                   <Button
                     style={{ marginRight: 25 }}
                     type="primary"
@@ -315,26 +202,28 @@ const Produit = () => {
                   >
                     Ajouter un produit
                   </Button>
-                  {/* // )}
-                  // {abilities.includes("create") && ( */}
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      setVisiblewithoutexcel(true);
-                      setrecord({});
-                      setAction("ADD");
-                    }}
+                  
+                  <Upload
+                    accept=".xlsx,.xls,.csv"
+                    customRequest={handleExcelImport}
+                    showUploadList={false}
+                    disabled={fileUploading}
                   >
-                    Importer depuis Excel
-                  </Button>
-                  {/* )} */}
+                    <Button 
+                      type="primary" 
+                      icon={<UploadOutlined />}
+                      loading={fileUploading}
+                    >
+                      Importer depuis Excel
+                    </Button>
+                  </Upload>
                 </div>
               }
             >
               <div className="table-responsive">
                 <Table
                   columns={columns}
-                  dataSource={!search.length > 0 ? data : filterData}
+                  dataSource={filterData.length > 0 ? filterData : data}
                   pagination={true}
                   className="ant-border-space"
                 />
@@ -342,6 +231,7 @@ const Produit = () => {
             </Card>
           </Col>
         </Row>
+        
         <ProduitModalAddEdit
           visible={visible}
           record={action === "EDIT" ? record : {}}
@@ -349,14 +239,7 @@ const Produit = () => {
           type={action}
           onCancel={() => setVisible(false)}
         />
-        {/* <ProduitModalAddEditWithoutexcel
-          visible={visiblewithoutexcel}
-          record={action === "EDIT" ? record : {}}
-          refetech={handrefetech}
-          type={action}
-          onCancel={() => setVisiblewithoutexcel(false)}
-        /> */}
-
+        
         <Modal
           visible={show}
           destroyOnClose
@@ -367,7 +250,14 @@ const Produit = () => {
           {record && (
             <Badge.Ribbon style={{ marginTop: 15 }} color="red">
               <Card>
-                <Row></Row>
+                <Row>
+                  <Col span={12}>
+                    <h3>Détails du produit</h3>
+                    <p><strong>Référence:</strong> {record.reference}</p>
+                    <p><strong>Nom:</strong> {record.nom}</p>
+                    {record.description && <p><strong>Description:</strong> {record.description}</p>}
+                  </Col>
+                </Row>
               </Card>
             </Badge.Ribbon>
           )}

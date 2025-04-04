@@ -206,6 +206,20 @@ function Sidenav({ color }) {
               <span className="label">Produit</span>
             </NavLink>
           </Menu.Item>
+
+          <Menu.Item key="10">
+            <NavLink to="/Invoice">
+              <span
+                className="icon"
+                style={{
+                  background: page === "Invoice" ? color : "",
+                }}
+              >
+                {tables}
+              </span>
+              <span className="label">Facture Client</span>
+            </NavLink>
+          </Menu.Item>
         {/* )} */}
 {/* 
         {pageList?.includes("customers") && ( */}
