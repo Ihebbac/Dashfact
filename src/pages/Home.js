@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Col,
@@ -160,23 +160,93 @@ function Home() {
 
   return (
     <div className="layout-content">
-      <Row gutter={[24, 24]}>
+      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
         {stats.map((stat, index) => (
-          <Col xs={24} sm={24} md={12} lg={8} xl={8} key={index}>
-            <Card bordered={false} loading={loading}>
-              <Statistic
-                title={stat.title}
-                value={stat.value}
-                prefix={stat.icon}
-                valueStyle={{ color: stat.color }}
-              />
-              {stat.subValue && (
-                <Text
-                  type="secondary"
-                  style={{ marginTop: 8, display: "block" }}
+          <Col xs={24} sm={12} md={12} lg={8} xl={8} key={index}>
+            <Card
+              bordered={false}
+              loading={loading}
+              style={{
+                borderRadius: 12,
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+                transition: "all 0.3s ease",
+                height: "100%",
+                ":hover": {
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.1)",
+                },
+              }}
+              bodyStyle={{
+                padding: "20px 24px",
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: `${stat.color}20`,
+                    borderRadius: "50%",
+                    width: 48,
+                    height: 48,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 16,
+                  }}
                 >
-                  Montant: {stat.subValue}
-                </Text>
+                  {React.cloneElement(stat.icon, {
+                    style: {
+                      fontSize: 20,
+                      color: stat.color,
+                    },
+                  })}
+                </div>
+                <div>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: "rgba(0, 0, 0, 0.45)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {stat.title}
+                  </Text>
+                  <Title
+                    level={3}
+                    style={{
+                      margin: 0,
+                      color: stat.color,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {stat.value}
+                  </Title>
+                </div>
+              </div>
+
+              {stat.subValue && (
+                <div
+                  style={{
+                    marginTop: "auto",
+                    paddingTop: 12,
+                    borderTop: "1px dashed #f0f0f0",
+                  }}
+                >
+                  <Text strong style={{ fontSize: 13 }}>
+                    <span style={{ color: "rgba(0, 0, 0, 0.45)" }}>
+                      Montant:{" "}
+                    </span>
+                    <span style={{ color: stat.color }}>{stat.subValue}</span>
+                  </Text>
+                </div>
               )}
             </Card>
           </Col>
