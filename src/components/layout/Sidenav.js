@@ -13,7 +13,7 @@
 // import { useState } from "react";
 import { Menu, Button } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/abstract-logs.png";
 import { useEffect } from "react";
 import axios from "axios";
 
@@ -170,7 +170,7 @@ function Sidenav({ color }) {
     <>
       <div className="brand">
         <img src={logo} alt="" />
-        <span>TN PRIME Dashboard</span>
+        <span>Stock360</span>
       </div>
       <hr />
       <Menu theme="light" mode="inline">
