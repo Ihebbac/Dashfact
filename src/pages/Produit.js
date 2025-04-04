@@ -134,15 +134,30 @@ const Produit = () => {
     },
   ];
 
-  const handelrecherche = () => {
-    axios
-      .get("http://127.0.0.1:3000/products/search?q=" + search)
-      .then((response) => {
-        console.log("response", response);
-        if (response.data.data) {
-          setData(response.data.data);
-        } else {
-          notification.error({ message: "No Data Found" });
+  const handleSearch = () => {
+    if (!search) {
+      fetchData();
+      return;
+    }
+    
+    const filtered = data.filter(item => 
+      item.nom.toLowerCase().includes(search.toLowerCase()) || 
+      item.reference.toLowerCase().includes(search.toLowerCase())
+    );
+    setfilterData(filtered);
+  };
+
+  const handleExcelImport = async (options) => {
+    const { file } = options;
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setFileUploading(true);
+    
+    try {
+      const response = await axios.post('http://127.0.0.1:3000/stock/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
         }
       });
       
