@@ -47,6 +47,7 @@ const Invoice = () => {
   const [show, setshow] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
+  const [stores, setStore] = useState([]);
   const [form] = Form.useForm();
 
   const abilities = JSON.parse(localStorage.getItem("user"))?.abilities?.find(
@@ -55,6 +56,7 @@ const Invoice = () => {
 
   useEffect(() => {
     fetchData();
+    fetchStore();
     fetchCustomers();
     fetchProducts();
   }, [refetech]);
@@ -75,8 +77,14 @@ const Invoice = () => {
   };
 
   const fetchCustomers = () => {
-    axios.get("http://127.0.0.1:3000/customer").then((response) => {
+    axios.get("http://127.0.0.1:3000/clients").then((response) => {
       setCustomers(response.data);
+    });
+  };
+
+  const fetchStore = () => {
+    axios.get("http://127.0.0.1:3000/magasins").then((response) => {
+      setStore(response.data);
     });
   };
 
@@ -188,10 +196,11 @@ const Invoice = () => {
       fetchData();
       return;
     }
-    
-    const filtered = data.filter(item => 
-      item.invoiceNumber.toLowerCase().includes(search.toLowerCase()) || 
-      item.customerName.toLowerCase().includes(search.toLowerCase())
+
+    const filtered = data.filter(
+      (item) =>
+        item.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
+        item.customerName.toLowerCase().includes(search.toLowerCase())
     );
     setfilterData(filtered);
   };
@@ -216,7 +225,7 @@ const Invoice = () => {
                     onPressEnter={handleSearch}
                     suffix={<SearchOutlined onClick={handleSearch} />}
                   />
-                  
+
                   <Button
                     type="primary"
                     onClick={() => {
@@ -241,7 +250,7 @@ const Invoice = () => {
             </Card>
           </Col>
         </Row>
-        
+
         <InvoiceModalAddEdit
           visible={visible}
           record={action === "EDIT" ? record : {}}
@@ -249,9 +258,10 @@ const Invoice = () => {
           type={action}
           customers={customers}
           products={products}
+          stores={stores}
           onCancel={() => setVisible(false)}
         />
-        
+
         {/* <Modal
           visible={show}
           destroyOnClose
