@@ -89,8 +89,7 @@ const ProduitModalAddEdit = (props) => {
         await axios.post("http://127.0.0.1:3000/stock", payload);
         message.success("Stock créé avec succès");
       }
-
-      refetch();
+      refetch()
       onCancel();
     } catch (error) {
       message.error("Erreur lors de l'enregistrement");
