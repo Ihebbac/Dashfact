@@ -26,6 +26,7 @@ import {
 import axios from "axios";
 import moment from "moment";
 import EChart from "../components/chart/EChart";
+import EChartMarge from "../components/chart/EChartMarge";
 
 const { Title, Text } = Typography;
 
@@ -139,6 +140,29 @@ function Home() {
     ...new Set(invoices.map((inv) => moment(inv.date).year())),
   ].sort((a, b) => b - a);
 
+  const invoicesWithMargin = invoices.map((invoice) => {
+    // Map through each item in the invoice to add the margin
+    const itemsWithMargin = invoice.items.map((item) => {
+      const marge = (item.prixVente - item.prixAchat) * item.quantity;
+      return {
+        ...item,
+        Marge: parseFloat(marge.toFixed(2)), // Round to 2 decimal places
+      };
+    });
+
+    // Calculate total margin for the invoice
+    const totalMarge = itemsWithMargin.reduce(
+      (sum, item) => sum + item.Marge,
+      0
+    );
+
+    return {
+      ...invoice,
+      items: itemsWithMargin,
+      totalMarge: parseFloat(totalMarge.toFixed(2)),
+    };
+  });
+
   const getYearlyData = () => {
     const years = [
       ...new Set(invoices.map((inv) => moment(inv.date).year())),
@@ -149,6 +173,25 @@ function Home() {
         (inv) => moment(inv.date).year() === year
       );
       const total = yearInvoices.reduce((sum, inv) => sum + inv.total, 0);
+
+      return {
+        year: year.toString(),
+        total: parseFloat(total.toFixed(2)),
+        count: yearInvoices.length,
+      };
+    });
+  };
+
+  const getYearlyDataMarge = () => {
+    const years = [
+      ...new Set(invoicesWithMargin.map((inv) => moment(inv.date).year())),
+    ].sort();
+
+    return years.map((year) => {
+      const yearInvoices = invoicesWithMargin.filter(
+        (inv) => moment(inv.date).year() === year
+      );
+      const total = yearInvoices.reduce((sum, inv) => sum + inv.totalMarge, 0);
 
       return {
         year: year.toString(),
@@ -252,6 +295,57 @@ function Home() {
           </Col>
         ))}
       </Row>
+
+      <Divider />
+
+      <Card
+        title="Analyse des Marge"
+        bordered={false}
+        loading={loading}
+        extra={
+          <div style={{ display: "flex", gap: 16 }}>
+            <Radio.Group
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value)}
+              buttonStyle="solid"
+            >
+              <Radio.Button value={viewModes.MONTHLY}>Mensuel</Radio.Button>
+              <Radio.Button value={viewModes.YEARLY}>Annuel</Radio.Button>
+            </Radio.Group>
+
+            {viewMode === viewModes.MONTHLY && (
+              <Radio.Group
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                buttonStyle="solid"
+              >
+                {availableYears.map((year) => (
+                  <Radio.Button key={year} value={year}>
+                    {year}
+                  </Radio.Button>
+                ))}
+              </Radio.Group>
+            )}
+          </div>
+        }
+      >
+        {viewMode === viewModes.YEARLY ? (
+          <EChartMarge
+            invoices={getYearlyDataMarge()}
+            viewMode={viewMode}
+            chartType="line"
+            xAxis="year"
+            yAxis="total"
+            title="Total des Factures par Année"
+          />
+        ) : (
+          <EChartMarge
+            invoices={invoicesWithMargin}
+            viewMode={viewMode}
+            yearFilter={viewMode === viewModes.MONTHLY ? selectedYear : null}
+          />
+        )}
+      </Card>
 
       <Divider />
 

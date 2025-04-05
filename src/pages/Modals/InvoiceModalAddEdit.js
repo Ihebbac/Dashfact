@@ -41,8 +41,8 @@ const InvoiceModalAddEdit = ({
     if (type === "EDIT" && record) {
       form.setFieldsValue({
         ...record,
-        date: dayjs(record.date),
-        customerId: record.customerId?._id || null,
+        date: dayjs(record.date) || new Date(),
+        customerId: record?.customerId || null,
       });
       setItems(record.items || []);
       calculateTotals(record.items || []);
@@ -152,6 +152,7 @@ const InvoiceModalAddEdit = ({
       refetech();
       onCancel();
     } catch (error) {
+      console.log("errr", error);
       notification.error({ message: "Erreur", description: error.message });
     } finally {
       setLoading(false);
@@ -280,7 +281,10 @@ const InvoiceModalAddEdit = ({
               label="Date"
               rules={[{ required: true, message: "Ce champ est requis" }]}
             >
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker
+                style={{ width: "100%" }}
+                disabled={type === "EDIT"}
+              />
             </Form.Item>
           </Col>
         </Row>

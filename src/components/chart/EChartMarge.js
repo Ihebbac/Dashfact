@@ -5,7 +5,7 @@ import moment from "moment";
 
 const { Title, Paragraph } = Typography;
 
-function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
+function EChartMarge({ invoices, viewMode = "monthly", yearFilter = null }) {
   const [chartOptions, setChartOptions] = useState({
     series: [],
     options: {
@@ -40,7 +40,7 @@ function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
         },
       },
       title: {
-        text: "Analyse des Factures",
+        text: "Analyse Marge",
         align: "left",
       },
       colors: ["#1890ff", "#52c41a"],
@@ -76,7 +76,7 @@ function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
             );
 
             const total = monthInvoices.reduce(
-              (sum, inv) => sum + inv.total,
+              (sum, inv) => sum + inv.totalMarge,
               0
             );
             const count = monthInvoices.length;
@@ -94,11 +94,7 @@ function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
               {
                 name: "Montant Total",
                 data: monthlyData.map((d) => d.total),
-              },
-              {
-                name: "Nombre de Factures",
-                data: monthlyData.map((d) => d.count),
-              },
+              }
             ],
           };
         } else if (viewMode === "yearly") {
@@ -128,11 +124,7 @@ function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
               {
                 name: "Montant Total",
                 data: yearlyData.map((d) => d.total),
-              },
-              {
-                name: "Nombre de Factures",
-                data: yearlyData.map((d) => d.count),
-              },
+              }
             ],
           };
         }
@@ -184,4 +176,4 @@ function EChart({ invoices, viewMode = "monthly", yearFilter = null }) {
   );
 }
 
-export default EChart;
+export default EChartMarge;
