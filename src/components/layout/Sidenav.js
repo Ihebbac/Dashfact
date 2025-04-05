@@ -15,7 +15,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/images/abstract-logs.png";
 import { useEffect } from "react";
 import axios from "axios";
-import { BankFilled, ContactsFilled, CreditCardFilled, DatabaseFilled, LockTwoTone, ShopTwoTone } from "@ant-design/icons";
+import { BankFilled, ContactsFilled, CreditCardFilled, DatabaseFilled, DropboxOutlined, LockTwoTone, ShopTwoTone } from "@ant-design/icons";
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
@@ -184,7 +184,7 @@ function Sidenav({ color }) {
                 background: page === "produit" ? color : "",
               }}
             >
-              {tables}
+             <DropboxOutlined />
             </span>
             <span className="label">Produit</span>
           </NavLink>
