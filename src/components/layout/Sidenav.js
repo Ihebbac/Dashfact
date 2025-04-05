@@ -10,8 +10,7 @@
   * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// import { useState } from "react";
-import { Menu, Button } from "antd";
+import { Menu } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "../../assets/images/abstract-logs.png";
 import { useEffect } from "react";
@@ -22,6 +21,11 @@ function Sidenav({ color }) {
   const { pathname } = useLocation();
   const page = pathname?.replace("/", "");
 
+  // Get user data from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = user?.type === "admin";
+
+  // Icons definitions remain the same as before
   const dashboard = [
     <svg
       width="20"
@@ -146,10 +150,6 @@ function Sidenav({ color }) {
     </svg>,
   ];
 
-  const pageList = JSON.parse(localStorage.getItem("user"))?.abilities?.map(
-    (el) => el?.page
-  );
-
   return (
     <>
       <div className="brand">
@@ -158,8 +158,8 @@ function Sidenav({ color }) {
       </div>
       <hr />
       <Menu theme="light" mode="inline">
-        {/* dashboard */}
-        {/* {pageList?.includes("dashboard") && ( */}
+        {/* Dashboard - Admin only */}
+        {isAdmin && (
           <Menu.Item key="1">
             <NavLink to="/dashboard">
               <span
@@ -173,25 +173,26 @@ function Sidenav({ color }) {
               <span className="label">Dashboard</span>
             </NavLink>
           </Menu.Item>
-        {/* )}
-   
+        )}
 
-        {pageList?.includes("produit") && ( */}
-          <Menu.Item key="10">
-            <NavLink to="/produit">
-              <span
-                className="icon"
-                style={{
-                  background: page === "produit" ? color : "",
-                }}
-              >
-              <DatabaseFilled />
-              </span>
-              <span className="label">Produit</span>
-            </NavLink>
-          </Menu.Item>
+        {/* Product - Available for all users */}
+        <Menu.Item key="10">
+          <NavLink to="/produit">
+            <span
+              className="icon"
+              style={{
+                background: page === "produit" ? color : "",
+              }}
+            >
+              {tables}
+            </span>
+            <span className="label">Produit</span>
+          </NavLink>
+        </Menu.Item>
 
-          <Menu.Item key="10">
+        {/* Invoice - Admin only */}
+        {isAdmin && (
+          <Menu.Item key="11">
             <NavLink to="/Invoice">
               <span
                 className="icon"
@@ -204,9 +205,10 @@ function Sidenav({ color }) {
               <span className="label">Facture Client</span>
             </NavLink>
           </Menu.Item>
-        {/* )} */}
-{/* 
-        {pageList?.includes("customers") && ( */}
+        )}
+
+        {/* Clients - Admin only */}
+        {isAdmin && (
           <Menu.Item key="20">
             <NavLink to="/customers">
               <span
@@ -220,9 +222,10 @@ function Sidenav({ color }) {
               <span className="label">Client</span>
             </NavLink>
           </Menu.Item>
-        {/* // )} */}
+        )}
 
-        {/* // {pageList?.includes("orders") && ( */}
+        {/* Check - Admin only */}
+        {isAdmin && (
           <Menu.Item key="22">
             <NavLink to="/Check">
               <span
@@ -236,13 +239,16 @@ function Sidenav({ color }) {
               <span className="label">Check</span>
             </NavLink>
           </Menu.Item>
-        {/* )} */}
-        <Menu.Item key="99">
+        )}
+
+        {/* Magasin - Admin only */}
+        {isAdmin && (
+          <Menu.Item key="99">
             <NavLink to="/magasin">
               <span
                 className="icon"
                 style={{
-                  background: page === "orders" ? color : "",
+                  background: page === "magasin" ? color : "",
                 }}
               >
                <ShopTwoTone />
@@ -250,7 +256,10 @@ function Sidenav({ color }) {
               <span className="label">Magasin</span>
             </NavLink>
           </Menu.Item>
-        {/* {pageList?.includes("admins") && ( */}
+        )}
+
+        {/* Admins - Admin only */}
+        {isAdmin && (
           <Menu.Item key="21">
             <NavLink to="/admins">
               <span
@@ -264,7 +273,7 @@ function Sidenav({ color }) {
               <span className="label">Admins</span>
             </NavLink>
           </Menu.Item>
-        {/* )} */}
+        )}
       </Menu>
     </>
   );
