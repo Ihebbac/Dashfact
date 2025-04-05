@@ -250,7 +250,7 @@ const Produit = () => {
         <ProduitModalAddEdit
           visible={visible}
           record={action === "EDIT" ? record : {}}
-          refetech={handrefetech}
+          refetch={handrefetech}
           type={action}
           onCancel={() => setVisible(false)}
         />
