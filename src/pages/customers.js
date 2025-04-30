@@ -52,7 +52,7 @@ const Customers = () => {
 
   const fetchClients = () => {
     axios
-      .get("http://127.0.0.1:3000/clients")
+      .get("https://rayhanaboutique.online/clients")
       .then((response) => {
         if (response.data) {
           setSearch("");
@@ -78,7 +78,7 @@ const Customers = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete(`http://127.0.0.1:3000/clients/${clientData._id}`)
+          .delete(`https://rayhanaboutique.online/clients/${clientData._id}`)
           .then(() => {
             message.success("Client supprimé avec succès");
             handleRefetch();

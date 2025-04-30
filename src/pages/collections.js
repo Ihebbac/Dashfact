@@ -132,7 +132,7 @@ const Collections = () => {
         console.log("Success delete ", dataDelete);
         setisload(true);
         await axios
-          .delete(`http://127.0.0.1:3000/collection/${alldata.id}`)
+          .delete(`https://rayhanaboutique.online/collection/${alldata.id}`)
           .then(function (response) {
             handrefetech();
             setisload(false);
@@ -262,7 +262,7 @@ const Collections = () => {
 
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:3000/collection").then((response) => {
+    axios.get("https://rayhanaboutique.online/collection").then((response) => {
       console.log("response", response);
       if (response.data.data) {
         setData(response.data.data);
@@ -277,7 +277,7 @@ const Collections = () => {
     setisload(true);
     console.log("valuesssssss", values);
     // const res = await axios
-    // .post(`http://127.0.0.1:3000/collection/${values}`)
+    // .post(`https://rayhanaboutique.online/collection/${values}`)
     // .then(function (response) {
     //   // handrefetech();
     //   setisload(false);

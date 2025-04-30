@@ -24,7 +24,7 @@ const Login = () => {
     try {
       const { email, password } = values;
       const response = await axios.post(
-        "http://127.0.0.1:3000/api/auth/login",
+        "https://rayhanaboutique.online/api/auth/login",
         {
           email,
           password,

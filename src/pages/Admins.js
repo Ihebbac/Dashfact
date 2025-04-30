@@ -46,7 +46,7 @@ const Admins = () => {
       async onOk() {
         setisload(true);
         await axios
-          .delete(`http://127.0.0.1:3000/users/${alldata._id}`)
+          .delete(`https://rayhanaboutique.online/users/${alldata._id}`)
           .then(function (response) {
             handrefetech();
             setisload(false);
@@ -140,7 +140,7 @@ const Admins = () => {
   useEffect(() => {
     setisload(true);
     axios
-      .get("http://127.0.0.1:3000/api/user")
+      .get("https://rayhanaboutique.online/api/user")
       .then((response) => {
         if (response.data) {
           setData(response.data);
