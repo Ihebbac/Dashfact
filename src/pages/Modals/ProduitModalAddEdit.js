@@ -37,7 +37,9 @@ const ProduitModalAddEdit = (props) => {
   useEffect(() => {
     const fetchMagasins = async () => {
       try {
-        const response = await axios.get("https://rayhanaboutique.online/magasins");
+        const response = await axios.get(
+          "https://rayhanaboutique.online/magasins"
+        );
         setMagasins(response.data);
       } catch (err) {
         console.error("Error loading stores:", err);
@@ -63,7 +65,10 @@ const ProduitModalAddEdit = (props) => {
 
         // Initialize image preview if exists
         if (record.image) {
-          setImagePreview(`https://rayhanaboutique.online/upload/${record.image}`);
+          setImagePreview(
+            `https://rayhanaboutique.online/upload/${record.image}`
+          );
+          setImageFile(record?.image);
         }
       } else {
         form.resetFields();
@@ -172,7 +177,10 @@ const ProduitModalAddEdit = (props) => {
       };
 
       if (type === "EDIT") {
-        await axios.put(`https://rayhanaboutique.online/stock/${record._id}`, payload);
+        await axios.put(
+          `https://rayhanaboutique.online/stock/${record._id}`,
+          payload
+        );
         message.success("Produit mis à jour avec succès");
       } else {
         await axios.post("https://rayhanaboutique.online/stock", payload);
