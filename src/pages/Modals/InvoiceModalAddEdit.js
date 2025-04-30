@@ -292,7 +292,7 @@ const InvoiceModalAddEdit = ({
         <Form.Item
           name="customerId"
           label="Client"
-          rules={[{ required: true, message: "Ce champ est requis" }]}
+          rules={[{ required: false, message: "Ce champ est requis" }]}
         >
           <Select
             showSearch
