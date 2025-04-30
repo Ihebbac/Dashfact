@@ -11,8 +11,14 @@ import {
   Select,
   Table,
   Typography,
+  Upload,
+  Image,
 } from "antd";
-import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  MinusCircleOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -24,22 +30,47 @@ const ProduitModalAddEdit = (props) => {
   const [magasins, setMagasins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [quantities, setQuantities] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
-  // Initialize quantities from record or empty array
+  // Initialize form and quantities when modal becomes visible or record changes
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:3000/magasins")
-      .then((response) => setMagasins(response.data))
-      .catch((err) => console.error("Error loading stores:", err));
+    const fetchMagasins = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:3000/magasins");
+        setMagasins(response.data);
+      } catch (err) {
+        console.error("Error loading stores:", err);
+        message.error("Erreur lors du chargement des magasins");
+      }
+    };
 
-    if (type === "EDIT" && record?.quantite) {
-      setQuantities(record.quantite);
-      form.setFieldsValue({
-        ...record,
-      });
-    } else {
-      form.resetFields();
-      setQuantities([]);
+    if (visible) {
+      fetchMagasins();
+
+      if (type === "EDIT" && record) {
+        // Initialize form with record data
+        form.setFieldsValue({
+          nom: record.nom,
+          reference: record.reference,
+          taille: record.taille,
+          prixAchat: record.prixAchat,
+          prixVente: record.prixVente,
+        });
+
+        // Initialize quantities from record
+        setQuantities(record.quantite || []);
+
+        // Initialize image preview if exists
+        if (record.image) {
+          setImagePreview(`http://127.0.0.1:3000/upload/${record.image}`);
+        }
+      } else {
+        form.resetFields();
+        setQuantities([]);
+        setImageFile(null);
+        setImagePreview("");
+      }
     }
   }, [visible, record]);
 
@@ -47,7 +78,7 @@ const ProduitModalAddEdit = (props) => {
     setQuantities([
       ...quantities,
       {
-        magasinId: "",
+        magasinId: null,
         quantiteInitiale: 0,
         quantiteVendue: 0,
         quantitePerdue: 0,
@@ -56,24 +87,82 @@ const ProduitModalAddEdit = (props) => {
   };
 
   const handleRemoveMagasin = (index) => {
-    const newQuantities = [...quantities];
-    newQuantities.splice(index, 1);
+    const newQuantities = quantities.filter((_, i) => i !== index);
     setQuantities(newQuantities);
   };
 
   const handleQuantityChange = (index, field, value) => {
     const newQuantities = [...quantities];
-    newQuantities[index][field] = value;
+    newQuantities[index] = {
+      ...newQuantities[index],
+      [field]: value,
+    };
     setQuantities(newQuantities);
+  };
 
-    console.log("tttttttttttt", field, value, newQuantities);
+  const beforeUpload = (file) => {
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      message.error("Vous ne pouvez uploader que des fichiers images!");
+    }
+
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      message.error("L'image doit être inférieure à 2MB!");
+    }
+
+    return isImage && isLt2M;
+  };
+
+  const handleImageChange = (info) => {
+    if (info.file.status === "done") {
+      // Get this url from response in real world
+      const imageUrl = URL.createObjectURL(info.file.originFileObj);
+      setImagePreview(imageUrl);
+      setImageFile(info.file.originFileObj.name);
+      form.setFieldsValue("image", info.file.originFileObj.name);
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!imageFile) return null;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", imageFile);
+
+      const response = await axios.post(
+        "http://127.0.0.1:3000/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data.filename;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      message.error("Erreur lors de l'upload de l'image");
+      return null;
+    }
   };
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      let imageFilename = record?.image || null;
+
+      // // Upload new image if one was selected
+      // if (imageFile) {
+      //   imageFilename = await uploadImage();
+      //   if (!imageFilename) return;
+      // }
+
       const payload = {
         ...values,
+        image: imageFile,
         quantite: quantities.map((q) => ({
           ...q,
           quantiteInitiale: Number(q.quantiteInitiale),
@@ -84,31 +173,35 @@ const ProduitModalAddEdit = (props) => {
 
       if (type === "EDIT") {
         await axios.put(`http://127.0.0.1:3000/stock/${record._id}`, payload);
-        message.success("Stock mis à jour avec succès");
+        message.success("Produit mis à jour avec succès");
       } else {
         await axios.post("http://127.0.0.1:3000/stock", payload);
-        message.success("Stock créé avec succès");
+        message.success("Produit créé avec succès");
       }
-      refetch()
+
+      refetch();
       onCancel();
     } catch (error) {
-      message.error("Erreur lors de l'enregistrement");
       console.error("API Error:", error);
+      message.error(
+        error.response?.data?.message || "Erreur lors de l'enregistrement"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const columns = [
+  const quantityColumns = [
     {
       title: "Magasin",
       dataIndex: "magasinId",
-      render: (_, record, index) => (
+      render: (_, __, index) => (
         <Select
           value={quantities[index]?.magasinId}
           onChange={(value) => handleQuantityChange(index, "magasinId", value)}
           placeholder="Sélectionner un magasin"
           style={{ width: "100%" }}
+          allowClear
         >
           {magasins.map((magasin) => (
             <Select.Option key={magasin._id} value={magasin._id}>
@@ -121,7 +214,7 @@ const ProduitModalAddEdit = (props) => {
     {
       title: "Quantité Initiale",
       dataIndex: "quantiteInitiale",
-      render: (_, record, index) => (
+      render: (_, __, index) => (
         <InputNumber
           value={quantities[index]?.quantiteInitiale}
           onChange={(value) =>
@@ -135,7 +228,7 @@ const ProduitModalAddEdit = (props) => {
     {
       title: "Quantité Vendue",
       dataIndex: "quantiteVendue",
-      render: (_, record, index) => (
+      render: (_, __, index) => (
         <InputNumber
           value={quantities[index]?.quantiteVendue}
           onChange={(value) =>
@@ -149,7 +242,7 @@ const ProduitModalAddEdit = (props) => {
     {
       title: "Quantité Perdue",
       dataIndex: "quantitePerdue",
-      render: (_, record, index) => (
+      render: (_, __, index) => (
         <InputNumber
           value={quantities[index]?.quantitePerdue}
           onChange={(value) =>
@@ -168,9 +261,21 @@ const ProduitModalAddEdit = (props) => {
     },
   ];
 
+  const uploadProps = {
+    name: "file",
+    multiple: false,
+    showUploadList: false,
+    action: "http://127.0.0.1:3000/upload",
+    beforeUpload: beforeUpload,
+    onChange: handleImageChange,
+    accept: "image/*",
+  };
+
   return (
     <Modal
-      title={type === "EDIT" ? "MODIFIER LE STOCK" : "AJOUTER UN NOUVEAU STOCK"}
+      title={
+        type === "EDIT" ? "Modifier le Produit" : "Ajouter un Nouveau Produit"
+      }
       visible={visible}
       width={1000}
       onCancel={onCancel}
@@ -178,6 +283,7 @@ const ProduitModalAddEdit = (props) => {
       confirmLoading={loading}
       okText={type === "EDIT" ? "Mettre à jour" : "Créer"}
       cancelText="Annuler"
+      destroyOnClose
     >
       <Form form={form} onFinish={onFinish} layout="vertical">
         <Card>
@@ -206,10 +312,40 @@ const ProduitModalAddEdit = (props) => {
               </Form.Item>
             </Col>
 
+            <Col span={24} style={{ marginBottom: 16 }}>
+              <Form.Item label="Image du Produit">
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  {imagePreview ? (
+                    <Image
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{ maxWidth: 100, maxHeight: 100 }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 100,
+                        height: 100,
+                        border: "1px dashed #d9d9d9",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      Aucune image
+                    </div>
+                  )}
+                  <Upload {...uploadProps}>
+                    <Button icon={<UploadOutlined />}>Choisir une image</Button>
+                  </Upload>
+                </div>
+              </Form.Item>
+            </Col>
+
             <Col span={8}>
               <Form.Item
                 name="taille"
-                label="Taille (1-6)"
+                label="Taille"
                 rules={[
                   { required: true, message: "Ce champ est obligatoire" },
                   {
@@ -220,7 +356,7 @@ const ProduitModalAddEdit = (props) => {
                   },
                 ]}
               >
-                <InputNumber style={{ width: "100%" }} />
+                <InputNumber style={{ width: "100%" }} min={1} max={6} />
               </Form.Item>
             </Col>
 
@@ -232,7 +368,13 @@ const ProduitModalAddEdit = (props) => {
                   { required: true, message: "Ce champ est obligatoire" },
                 ]}
               >
-                <InputNumber style={{ width: "100%" }} min={0} step={0.01} />
+                <InputNumber
+                  style={{ width: "100%" }}
+                  min={0}
+                  step={0.01}
+                  formatter={(value) => `TND ${value}`}
+                  parser={(value) => value.replace("TND ", "")}
+                />
               </Form.Item>
             </Col>
 
@@ -244,7 +386,13 @@ const ProduitModalAddEdit = (props) => {
                   { required: true, message: "Ce champ est obligatoire" },
                 ]}
               >
-                <InputNumber style={{ width: "100%" }} min={0} step={0.01} />
+                <InputNumber
+                  style={{ width: "100%" }}
+                  min={0}
+                  step={0.01}
+                  formatter={(value) => `TND ${value}`}
+                  parser={(value) => value.replace("TND ", "")}
+                />
               </Form.Item>
             </Col>
 
@@ -254,10 +402,11 @@ const ProduitModalAddEdit = (props) => {
               </Text>
 
               <Table
-                columns={columns}
+                columns={quantityColumns}
                 dataSource={quantities}
                 pagination={false}
                 rowKey={(_, index) => index}
+                bordered
                 footer={() => (
                   <Button
                     type="dashed"

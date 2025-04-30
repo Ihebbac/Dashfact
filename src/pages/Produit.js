@@ -14,6 +14,7 @@ import {
   Tag,
   Divider,
   Progress,
+  Image,
 } from "antd";
 import {
   DeleteTwoTone,
@@ -94,6 +95,20 @@ const Produit = () => {
 
   const columns = [
     {
+      title: "Image",
+      dataIndex: "image",
+      key: "image",
+      render: (_, record) => (
+        <div>
+          <Image
+            src={`http://127.0.0.1:3000/upload/${record?.image}`}
+            width={100}
+            height={100}
+          />
+        </div>
+      ),
+    },
+    {
       title: "Référence",
       dataIndex: "reference",
       key: "reference",
@@ -134,7 +149,7 @@ const Produit = () => {
               <Button
                 type="primary"
                 danger
-                onClick={() => showPromiseConfirm(record, record.id)}
+                onClick={() => showPromiseConfirm(record, record._id)}
               >
                 <DeleteTwoTone twoToneColor="#FFFFFF" />
               </Button>
