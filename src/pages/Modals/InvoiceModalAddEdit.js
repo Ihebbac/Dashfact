@@ -13,12 +13,20 @@ import {
   notification,
   Row,
   Col,
+  Tag,
 } from "antd";
 import { PlusOutlined, MinusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import axios from "axios";
 
 const { Option } = Select;
+
+const statusOptions = [
+  { value: "unpaid", label: "Non Payée", color: "red" },
+  { value: "partially_paid", label: "Partiellement Payée", color: "orange" },
+  { value: "paid", label: "Payée", color: "green" },
+  { value: "cancelled", label: "Annulée", color: "gray" },
+];
 
 const InvoiceModalAddEdit = ({
   visible,
@@ -27,7 +35,7 @@ const InvoiceModalAddEdit = ({
   type,
   customers,
   products,
-  stores, // Added stores prop
+  stores,
   onCancel,
 }) => {
   const [form] = Form.useForm();
@@ -36,6 +44,7 @@ const InvoiceModalAddEdit = ({
   const [tax, setTax] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("unpaid");
 
   useEffect(() => {
     if (type === "EDIT" && record) {
@@ -43,8 +52,10 @@ const InvoiceModalAddEdit = ({
         ...record,
         date: dayjs(record.date) || new Date(),
         customerId: record?.customerId || null,
+        status: record.status || "unpaid",
       });
       setItems(record.items || []);
+      setStatus(record.status || "unpaid");
       calculateTotals(record.items || []);
     } else {
       form.resetFields();
@@ -52,8 +63,8 @@ const InvoiceModalAddEdit = ({
       setSubtotal(0);
       setTax(0);
       setTotal(0);
+      setStatus("unpaid");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, record, type]);
 
   const calculateTotals = (items) => {
@@ -61,7 +72,7 @@ const InvoiceModalAddEdit = ({
       (sum, item) => sum + item.quantity * item.prixVente,
       0
     );
-    const newTax = newSubtotal * 0.19; // Assuming 20% tax
+    const newTax = newSubtotal * 0.19;
     const newTotal = newSubtotal + newTax;
 
     setSubtotal(newSubtotal);
@@ -74,7 +85,7 @@ const InvoiceModalAddEdit = ({
       ...items,
       {
         stockId: null,
-        magasinId: null, // Added magasinId
+        magasinId: null,
         reference: "",
         nom: "",
         taille: 0,
@@ -96,7 +107,6 @@ const InvoiceModalAddEdit = ({
     const newItems = [...items];
     newItems[index][field] = value;
 
-    // If product is selected, update product details
     if (field === "stockId" && value) {
       const product = products.find((p) => p._id === value);
       if (product) {
@@ -123,6 +133,10 @@ const InvoiceModalAddEdit = ({
     }
   };
 
+  const handleStatusChange = (value) => {
+    setStatus(value);
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -133,12 +147,12 @@ const InvoiceModalAddEdit = ({
         date: values.date.toISOString(),
         items: items.map((item) => ({
           ...item,
-          magasinId: item.magasinId || stores[0]?._id, // Ensure magasinId is set
+          magasinId: item.magasinId || stores[0]?._id,
         })),
         subtotal,
         tax,
         total,
-        status: "unpaid",
+        status: status, // Use the status state
       };
 
       if (type === "EDIT") {
@@ -152,8 +166,11 @@ const InvoiceModalAddEdit = ({
       refetech();
       onCancel();
     } catch (error) {
-      console.log("errr", error);
-      notification.error({ message: "Erreur", description: error.message });
+      console.error("Error:", error);
+      notification.error({ 
+        message: "Erreur", 
+        description: error.response?.data?.message || error.message 
+      });
     } finally {
       setLoading(false);
     }
@@ -171,9 +188,6 @@ const InvoiceModalAddEdit = ({
           onChange={(val) => handleItemChange(index, "stockId", val)}
           showSearch
           optionFilterProp="children"
-          // filterOption={(input, option) =>
-          //   option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          // }
         >
           {products.map((product) => (
             <Option key={product._id} value={product._id}>
@@ -194,9 +208,6 @@ const InvoiceModalAddEdit = ({
           onChange={(val) => handleItemChange(index, "magasinId", val)}
           showSearch
           optionFilterProp="children"
-          // filterOption={(input, option) =>
-          //   option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          // }
         >
           {stores.map((store) => (
             <Option key={store._id} value={store._id}>
@@ -289,18 +300,35 @@ const InvoiceModalAddEdit = ({
           </Col>
         </Row>
 
+        {type === "EDIT" && (
+          <Form.Item
+            name="status"
+            label="Statut"
+            rules={[{ required: true, message: "Ce champ est requis" }]}
+          >
+            <Select
+              onChange={handleStatusChange}
+              value={status}
+              optionLabelProp="label"
+            >
+              {statusOptions.map((option) => (
+                <Option key={option.value} value={option.value} label={option.label}>
+                  <Tag color={option.color}>{option.label}</Tag>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
+
         <Form.Item
           name="customerId"
           label="Client"
-          rules={[{ required: false, message: "Ce champ est requis" }]}
+          rules={[{ required: true, message: "Ce champ est requis" }]}
         >
           <Select
             showSearch
             optionFilterProp="children"
             onChange={handleCustomerChange}
-            // filterOption={(input, option) =>
-            //   option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            // }
           >
             {customers.map((customer) => (
               <Option key={customer._id} value={customer._id}>

@@ -628,18 +628,25 @@ const Invoice = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        let color = "default";
-        if (status === "paid") color = "green";
-        if (status === "unpaid") color = "red";
-        if (status === "partially_paid") color = "orange";
-        return <Badge color={color} text={status} />;
+        const statusConfig = {
+          paid: { color: "green", text: "Payé" },
+          unpaid: { color: "red", text: "Non payé" },
+          partially_paid: { color: "orange", text: "Partiellement payé" },
+          cancelled: { color: "gray", text: "Annulé" },
+          default: { color: "default", text: status },
+        };
+
+        const config = statusConfig[status] || statusConfig.default;
+        return <Badge color={config.color} text={config.text} />;
       },
-      filters: [
-        { text: "Payé", value: "paid" },
-        { text: "Non payé", value: "unpaid" },
-        { text: "Partiellement payé", value: "partially_paid" },
-      ],
+      filters: Object.entries({
+        paid: "Payé",
+        unpaid: "Non payé",
+        partially_paid: "Partiellement payé",
+        cancelled: "Annulé",
+      }).map(([value, text]) => ({ text, value })),
       onFilter: (value, record) => record.status === value,
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
     {
       title: "Actions",
