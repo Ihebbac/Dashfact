@@ -166,171 +166,434 @@ const Invoice = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Colors
-    const primaryColor = [41, 128, 185];
-    const secondaryColor = [52, 152, 219];
-    const lightColor = [245, 245, 245];
-    const textGray = [80, 80, 80];
+    const theme = {
+      primary: [41, 128, 185],
+      secondary: [52, 152, 219],
+      light: [245, 245, 245],
+      gray: [80, 80, 80],
+    };
 
-    // --- HEADER BAR ---
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, pageWidth, 25, "F");
+    const {
+      invoiceNumber,
+      date,
+      status,
+      customerName,
+      customerAddress,
+      customerPhone,
+      items,
+      subtotal,
+      tax,
+      total,
+      notes,
+    } = invoice;
 
-    // Optional logo
-    // const imgData = 'data:image/png;base64,...';
-    // doc.addImage(imgData, 'PNG', 15, 5, 15, 15);
+    const drawHeader = () => {
+      const headerHeight = 40;
+      doc.setFillColor(...theme.primary);
+      doc.rect(0, 0, pageWidth, headerHeight, "F");
 
-    // Company Name & Address (left)
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("VOTRE ENTREPRISE", 15, 15);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Societe OR - FIN", 15, 18);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("123 Rue de Commerce, Paris", 15, 21);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("18 Rue El Mofti, Tunis", 15, 25);
+      doc.text("Tél: 71 200 090 • MF: 803541/R", 15, 31);
 
-    // Invoice info (right)
-    doc.setFontSize(12);
-    doc.text(`FACTURE #${invoice.invoiceNumber}`, pageWidth - 15, 12, {
-      align: "right",
-    });
+      doc.setFontSize(13);
+      doc.text(`FACTURE #${invoiceNumber}`, pageWidth - 15, 18, {
+        align: "right",
+      });
+      doc.setFontSize(11);
+      doc.text(
+        `Date : ${dayjs(date).format("DD/MM/YYYY")}`,
+        pageWidth - 15,
+        25,
+        { align: "right" }
+      );
+      // doc.text(`Statut : ${status.toUpperCase()}`, pageWidth - 15, 31, { align: "right" });
+    };
 
-    doc.setFontSize(9);
-    doc.text(
-      `Date : ${dayjs(invoice.date).format("DD/MM/YYYY")}`,
-      pageWidth - 15,
-      18,
-      { align: "right" }
-    );
-    doc.text(`Statut : ${invoice.status.toUpperCase()}`, pageWidth - 15, 23, {
-      align: "right",
-    });
+    const drawClientBox = () => {
+      doc.setFillColor(...theme.light);
+      doc.rect(15, 50, pageWidth - 30, 30, "F");
 
-    // --- CLIENT BOX ---
-    doc.setTextColor(0);
-    doc.setFillColor(...lightColor);
-    doc.rect(15, 35, pageWidth - 30, 30, "F");
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("CLIENT", 20, 43);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(invoice.customerName, 20, 50);
-    doc.text(invoice.customerAddress, 20, 56);
-    doc.text(`Tél: ${invoice.customerPhone}`, 20, 62);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text("CLIENT", 20, 58);
 
-    // --- SÉPARATEUR ---
-    doc.setDrawColor(220);
-    doc.setLineWidth(0.2);
-    doc.line(15, 70, pageWidth - 15, 70);
-
-    // --- TABLE PRODUITS ---
-    const itemsData = invoice.items.map((item) => [
-      item.reference,
-      item.nom,
-      item.taille,
-      item.quantity,
-      `${item.prixVente.toFixed(2)} TND`,
-      `${(item.quantity * item.prixVente).toFixed(2)} TND`,
-    ]);
-
-    autoTable(doc, {
-      startY: 75,
-      head: [['Réf.', 'Désignation', 'Taille', 'Qté', 'Prix Unitaire', 'Total']],
-      body: itemsData,
-      theme: 'grid',
-      headStyles: {
-        fillColor: secondaryColor,
-        textColor: 255,
-        fontStyle: 'bold',
-        fontSize: 11,
-        halign: 'center',
-        valign: 'middle'
-      },
-      bodyStyles: {
-        fontSize: 10,
-        valign: 'middle',
-        cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
-      },
-      alternateRowStyles: {
-        fillColor: [250, 250, 250],
-      },
-      columnStyles: {
-        0: { cellWidth: 25, halign: 'left' }, // Réf.
-        1: { cellWidth: 60, halign: 'left' }, // Désignation
-        2: { cellWidth: 20, halign: 'center' }, // Taille
-        3: { cellWidth: 20, halign: 'center' }, // Qté
-        4: { cellWidth: 30, halign: 'right' }, // Prix U
-        5: { cellWidth: 30, halign: 'right' }, // Total
-      },
-      styles: {
-        lineColor: 230,
-        lineWidth: 0.1,
-        overflow: 'linebreak',
-        font: 'helvetica',
-      },
-      margin: { top: 0, left: 15, right: 15 },
-      didDrawPage: function (data) {
-        // Footer (déjà défini dans le reste du script, tu peux le garder tel quel ici)
-        const footerY = pageHeight - 30;
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, footerY, pageWidth, 30, 'F');
-    
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(9);
-        doc.text("Merci pour votre confiance. Paiement attendu sous 30 jours.", pageWidth / 2, footerY + 10, { align: 'center' });
-        doc.text("IBAN: FR76 3000 1000 0100 0000 0000 XXXX • BIC: SOGEFRPP", pageWidth / 2, footerY + 16, { align: 'center' });
-    
-        doc.setFontSize(8);
-        doc.text(`Page ${data.pageCount}`, pageWidth - 15, footerY + 26, { align: 'right' });
-      }
-    });
-    // --- TOTAUX ---
-    const finalY = doc.lastAutoTable.finalY + 10;
-
-    doc.setFillColor(...lightColor);
-    doc.setDrawColor(...secondaryColor);
-    doc.setLineWidth(0.5);
-    doc.rect(pageWidth - 100, finalY, 85, 30, "FD");
-
-    doc.setFontSize(12);
-    doc.setTextColor(...textGray);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Sous-total:`, pageWidth - 95, finalY + 10);
-    doc.text(
-      `${invoice.subtotal.toFixed(2)} TND`,
-      pageWidth - 30,
-      finalY + 10,
-      { align: "right" }
-    );
-
-    doc.text(`Taxe:`, pageWidth - 95, finalY + 18);
-    doc.text(`${invoice.tax.toFixed(2)} TND`, pageWidth - 30, finalY + 18, {
-      align: "right",
-    });
-
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...primaryColor);
-    doc.text(`TOTAL:`, pageWidth - 95, finalY + 26);
-    doc.text(`${invoice.total.toFixed(2)} TND`, pageWidth - 30, finalY + 26, {
-      align: "right",
-    });
-
-    // --- NOTES ---
-    if (invoice.notes) {
-      doc.setFillColor(245, 245, 245);
-      doc.rect(15, finalY + 35, pageWidth - 30, 20, "F");
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.setTextColor(...textGray);
-      doc.text(`Notes: ${invoice.notes}`, 20, finalY + 45, {
-        maxWidth: pageWidth - 40,
-      });
-    }
+      doc.text(customerName, 20, 65);
+      doc.text(customerAddress, 20, 71);
+      doc.text(`Tél: ${customerPhone}`, 20, 77);
+    };
 
-    // --- SAUVEGARDE ---
-    doc.save(`facture_${invoice.invoiceNumber}.pdf`);
+    const drawSeparator = () => {
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.2);
+      doc.line(15, 85, pageWidth - 15, 85);
+    };
+
+    const drawTable = () => {
+      const itemsData = items.map((item) => [
+        item.reference,
+        item.nom,
+        item.taille,
+        item.quantity,
+        `${item.prixVente.toFixed(2)} TND`,
+        `${(item.quantity * item.prixVente).toFixed(2)} TND`,
+      ]);
+
+      autoTable(doc, {
+        startY: 90,
+        head: [
+          ["Réf.", "Désignation", "Taille", "Qté", "Prix Unitaire", "Total"],
+        ],
+        body: itemsData,
+        theme: "grid",
+        headStyles: {
+          fillColor: theme.secondary,
+          textColor: 255,
+          fontStyle: "bold",
+          fontSize: 11,
+          halign: "center",
+        },
+        bodyStyles: {
+          fontSize: 10,
+          valign: "middle",
+          cellPadding: 4,
+        },
+        alternateRowStyles: {
+          fillColor: [250, 250, 250],
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 60 },
+          2: { cellWidth: 20, halign: "center" },
+          3: { cellWidth: 20, halign: "center" },
+          4: { cellWidth: 30, halign: "right" },
+          5: { cellWidth: 30, halign: "right" },
+        },
+        styles: {
+          lineColor: 230,
+          lineWidth: 0.1,
+          font: "helvetica",
+        },
+        margin: { left: 15, right: 15 },
+        didDrawPage: drawFooter,
+      });
+    };
+
+    const drawFooter = (data) => {
+      const footerY = pageHeight - 30;
+      doc.setFillColor(...theme.primary);
+      doc.rect(0, footerY, pageWidth, 30, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text(
+        "Merci pour votre confiance. Paiement attendu sous 30 jours.",
+        pageWidth / 2,
+        footerY + 10,
+        { align: "center" }
+      );
+      doc.text(
+        "IBAN: FR76 3000 1000 0100 0000 0000 XXXX • BIC: SOGEFRPP",
+        pageWidth / 2,
+        footerY + 16,
+        { align: "center" }
+      );
+
+      doc.setFontSize(8);
+      doc.text(`Page ${data.pageCount}`, pageWidth - 15, footerY + 26, {
+        align: "right",
+      });
+    };
+
+    const drawTotals = () => {
+      const finalY = doc.lastAutoTable.finalY + 10;
+      const totalsHeight = notes ? 50 : 40;
+      const totalsWidth = 100;
+      const totalsX = pageWidth - totalsWidth - 15;
+
+      doc.setFillColor(...theme.light);
+      doc.setDrawColor(...theme.secondary);
+      doc.setLineWidth(0.5);
+      doc.rect(totalsX, finalY, totalsWidth, totalsHeight, "FD");
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(13);
+      doc.setTextColor(...theme.gray);
+
+      const lines = [
+        ["Sous-total:", `${subtotal.toFixed(2)} TND`],
+        ["Taxe (19%):", `${tax.toFixed(2)} TND`],
+        ["Timbre Fiscal:", "1.00 TND"],
+      ];
+
+      lines.forEach(([label, value], i) => {
+        const y = finalY + 12 + i * 10;
+        doc.text(label, totalsX + 5, y);
+        doc.text(value, totalsX + totalsWidth - 5, y, { align: "right" });
+      });
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...theme.primary);
+      doc.text("TOTAL:", totalsX + 5, finalY + 45);
+      doc.text(
+        `${(total + 1).toFixed(2)} TND`,
+        totalsX + totalsWidth - 5,
+        finalY + 45,
+        { align: "right" }
+      );
+
+      return finalY + totalsHeight;
+    };
+
+    const drawNotes = (yPos) => {
+      if (notes) {
+        doc.setFillColor(...theme.light);
+        doc.rect(15, yPos + 5, pageWidth - 30, 20, "F");
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(...theme.gray);
+        doc.text(`Notes: ${notes}`, 20, yPos + 15, {
+          maxWidth: pageWidth - 40,
+        });
+      }
+    };
+
+    // ==== Render All Sections ====
+    drawHeader();
+    drawClientBox();
+    drawSeparator();
+    drawTable();
+    const afterTotalsY = drawTotals();
+    drawNotes(afterTotalsY);
+
+    // ==== Save PDF ====
+    doc.save(`facture_${invoiceNumber}.pdf`);
+  };
+
+  const generatePDFBCD = (invoice) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    const theme = {
+      primary: [41, 128, 185],
+      secondary: [52, 152, 219],
+      light: [245, 245, 245],
+      gray: [80, 80, 80],
+    };
+
+    const {
+      invoiceNumber,
+      date,
+      status,
+      customerName,
+      customerAddress,
+      customerPhone,
+      items,
+      subtotal,
+      tax,
+      total,
+      notes,
+    } = invoice;
+
+    const drawHeader = () => {
+      const headerHeight = 40;
+      doc.setFillColor(...theme.primary);
+      doc.rect(0, 0, pageWidth, headerHeight, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Societe OR - FIN", 15, 18);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("18 Rue El Mofti, Tunis", 15, 25);
+      doc.text("Tél: 71 200 090", 15, 31);
+
+      doc.setFontSize(13);
+      doc.text(`BDC #${invoiceNumber}`, pageWidth - 15, 18, {
+        align: "right",
+      });
+      doc.setFontSize(11);
+      doc.text(
+        `Date : ${dayjs(date).format("DD/MM/YYYY")}`,
+        pageWidth - 15,
+        25,
+        { align: "right" }
+      );
+      // doc.text(`Statut : ${status.toUpperCase()}`, pageWidth - 15, 31, { align: "right" });
+    };
+
+    const drawClientBox = () => {
+      doc.setFillColor(...theme.light);
+      doc.rect(15, 50, pageWidth - 30, 30, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text("CLIENT", 20, 58);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(customerName, 20, 65);
+      doc.text(customerAddress, 20, 71);
+      doc.text(`Tél: ${customerPhone}`, 20, 77);
+    };
+
+    const drawSeparator = () => {
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.2);
+      doc.line(15, 85, pageWidth - 15, 85);
+    };
+
+    const drawTable = () => {
+      const itemsData = items.map((item) => [
+        item.reference,
+        item.nom,
+        item.taille,
+        item.quantity,
+        `${item.prixVente.toFixed(2)} TND`,
+        `${(item.quantity * item.prixVente).toFixed(2)} TND`,
+      ]);
+
+      autoTable(doc, {
+        startY: 90,
+        head: [
+          ["Réf.", "Désignation", "Taille", "Qté", "Prix Unitaire", "Total"],
+        ],
+        body: itemsData,
+        theme: "grid",
+        headStyles: {
+          fillColor: theme.secondary,
+          textColor: 255,
+          fontStyle: "bold",
+          fontSize: 11,
+          halign: "center",
+        },
+        bodyStyles: {
+          fontSize: 10,
+          valign: "middle",
+          cellPadding: 4,
+        },
+        alternateRowStyles: {
+          fillColor: [250, 250, 250],
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 60 },
+          2: { cellWidth: 20, halign: "center" },
+          3: { cellWidth: 20, halign: "center" },
+          4: { cellWidth: 30, halign: "right" },
+          5: { cellWidth: 30, halign: "right" },
+        },
+        styles: {
+          lineColor: 230,
+          lineWidth: 0.1,
+          font: "helvetica",
+        },
+        margin: { left: 15, right: 15 },
+        didDrawPage: drawFooter,
+      });
+    };
+
+    const drawFooter = (data) => {
+      const footerY = pageHeight - 30;
+      doc.setFillColor(...theme.primary);
+      doc.rect(0, footerY, pageWidth, 30, "F");
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text(
+        "Merci pour votre confiance. Paiement attendu sous 30 jours.",
+        pageWidth / 2,
+        footerY + 10,
+        { align: "center" }
+      );
+      // doc.text("IBAN: FR76 3000 1000 0100 0000 0000 XXXX • BIC: SOGEFRPP", pageWidth / 2, footerY + 16, { align: 'center' });
+
+      doc.setFontSize(8);
+      doc.text(`Page ${data.pageCount}`, pageWidth - 15, footerY + 26, {
+        align: "right",
+      });
+    };
+
+    const drawTotals = () => {
+      const finalY = doc.lastAutoTable.finalY + 10;
+      const totalsHeight = notes ? 50 : 40;
+      const totalsWidth = 100;
+      const totalsX = pageWidth - totalsWidth - 15;
+
+      doc.setFillColor(...theme.light);
+      doc.setDrawColor(...theme.secondary);
+      doc.setLineWidth(0.5);
+      doc.rect(totalsX, finalY, totalsWidth, totalsHeight, "FD");
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(13);
+      doc.setTextColor(...theme.gray);
+
+      const lines = [
+        ["Sous-total:", `${subtotal.toFixed(2)} TND`],
+        // ["Taxe (19%):", `${tax.toFixed(2)} TND`],
+        // ["Timbre Fiscal:", "1.00 TND"],
+      ];
+
+      lines.forEach(([label, value], i) => {
+        const y = finalY + 12 + i * 10;
+        doc.text(label, totalsX + 5, y);
+        doc.text(value, totalsX + totalsWidth - 5, y, { align: "right" });
+      });
+
+      // doc.setFont("helvetica", "bold");
+      // doc.setFontSize(14);
+      // doc.setTextColor(...theme.primary);
+      // doc.text("TOTAL:", totalsX + 5, finalY + 45);
+      // doc.text(
+      //   `${total.toFixed(2)} TND`,
+      //   totalsX + totalsWidth - 5,
+      //   finalY + 45,
+      //   { align: "right" }
+      // );
+
+      return finalY + totalsHeight;
+    };
+
+    const drawNotes = (yPos) => {
+      if (notes) {
+        doc.setFillColor(...theme.light);
+        doc.rect(15, yPos + 5, pageWidth - 30, 20, "F");
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(...theme.gray);
+        doc.text(`Notes: ${notes}`, 20, yPos + 15, {
+          maxWidth: pageWidth - 40,
+        });
+      }
+    };
+
+    // ==== Render All Sections ====
+    drawHeader();
+    drawClientBox();
+    drawSeparator();
+    drawTable();
+    const afterTotalsY = drawTotals();
+    drawNotes(afterTotalsY);
+
+    // ==== Save PDF ====
+    doc.save(`BDC_${invoiceNumber}.pdf`);
   };
 
   const columns = [
@@ -399,7 +662,17 @@ const Invoice = () => {
               generatePDF(record);
             }}
           >
-            <InfoCircleOutlined />
+            Facture <InfoCircleOutlined />
+          </Button>
+
+          <Button
+            onClick={() => {
+              // setshow(true);
+              // setrecord(record);
+              generatePDFBCD(record);
+            }}
+          >
+            BCD <InfoCircleOutlined />
           </Button>
           <Button
             type="primary"

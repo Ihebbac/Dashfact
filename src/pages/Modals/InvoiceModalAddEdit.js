@@ -61,7 +61,7 @@ const InvoiceModalAddEdit = ({
       (sum, item) => sum + item.quantity * item.prixVente,
       0
     );
-    const newTax = newSubtotal * 0.2; // Assuming 20% tax
+    const newTax = newSubtotal * 0.19; // Assuming 20% tax
     const newTotal = newSubtotal + newTax;
 
     setSubtotal(newSubtotal);
@@ -368,7 +368,7 @@ const InvoiceModalAddEdit = ({
                 <span>{subtotal.toFixed(2)} TND</span>
               </div>
               <div>
-                <span style={{ marginRight: 16 }}>Taxe (20%):</span>
+                <span style={{ marginRight: 16 }}>Taxe (19%):</span>
                 <span>{tax.toFixed(2)} TND</span>
               </div>
               <div>
