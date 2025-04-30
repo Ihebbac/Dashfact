@@ -669,7 +669,7 @@ const Invoice = () => {
               generatePDF(record);
             }}
           >
-            Facture <InfoCircleOutlined />
+            Facture
           </Button>
 
           <Button
@@ -679,7 +679,7 @@ const Invoice = () => {
               generatePDFBCD(record);
             }}
           >
-            BCD <InfoCircleOutlined />
+            BCD
           </Button>
           <Button
             type="primary"
