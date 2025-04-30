@@ -28,6 +28,7 @@ import axios from "axios";
 import _ from "lodash";
 import ProduitModalAddEdit from "./Modals/ProduitModalAddEdit";
 import Text from "antd/lib/typography/Text";
+import * as XLSX from "xlsx";
 
 const { confirm } = Modal;
 
@@ -157,17 +158,18 @@ const Produit = () => {
     );
     setfilterData(filtered);
   };
+  const [dataSheet, setDataSheet] = useState([]);
 
-  const handleExcelImport = async (options) => {
-    const { file } = options;
+  const handleExcelImport = async ({ file }) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    setFileUploading(true);
-
     try {
+      // Optional: Set loading state here
+      // setFileUploading(true);
+
       const response = await axios.post(
-        "http://127.0.0.1:3000/stock/import",
+        "http://127.0.0.1:3000/stock/extract",
         formData,
         {
           headers: {
@@ -176,15 +178,21 @@ const Produit = () => {
         }
       );
 
-      message.success(`${file.name} importé avec succès`);
-      handrefetech();
+      const extractedData = response.data;
+      console.log("✅ Extracted data with images:", extractedData);
+
+      // Store in state or pass to another handler
+      setDataSheet(extractedData);
+
+      // Optional: show success toast
+      // message.success(`${file.name} importé avec succès`);
     } catch (error) {
-      message.error(`Échec de l'importation de ${file.name}: ${error.message}`);
+      console.error("❌ Error importing Excel:", error);
+      // message.error(`Échec de l'importation: ${error.message}`);
     } finally {
-      setFileUploading(false);
+      // Optional: setFileUploading(false);
     }
   };
-
   return (
     <>
       <h1>Produits</h1>
