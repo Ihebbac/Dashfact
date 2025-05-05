@@ -54,7 +54,7 @@ const Produit = () => {
   }, [refetech]);
 
   const fetchData = () => {
-    axios.get("https://rayhanaboutique.online/stock").then((response) => {
+    axios.get("http://127.0.0.1:3000/stock").then((response) => {
       if (response.data) {
         setSearch("");
         setfilterData([]);
@@ -68,7 +68,7 @@ const Produit = () => {
     });
 
     axios
-      .get("https://rayhanaboutique.online/magasins")
+      .get("http://127.0.0.1:3000/magasins")
       .then((response) => setMagasins(response.data))
       .catch((err) => console.error("Error loading stores:", err));
   };
@@ -83,7 +83,7 @@ const Produit = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete("https://rayhanaboutique.online/stock/" + dataDelete)
+          .delete("http://127.0.0.1:3000/stock/" + dataDelete)
           .then((response) => {
             message.success("Produit supprimer avec success.");
             handrefetech();
@@ -101,7 +101,7 @@ const Produit = () => {
       render: (_, record) => (
         <div>
           <Image
-            src={`https://rayhanaboutique.online/upload/${record?.image}`}
+            src={`http://127.0.0.1:3000/upload/${record?.image}`}
             width={100}
             height={100}
           />
@@ -184,7 +184,7 @@ const Produit = () => {
       // setFileUploading(true);
 
       const response = await axios.post(
-        "https://rayhanaboutique.online/stock/extract",
+        "http://127.0.0.1:3000/stock/extract",
         formData,
         {
           headers: {

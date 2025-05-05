@@ -41,10 +41,10 @@ const ClientModalAddEdit = (props) => {
     setLoading(true);
     try {
       if (action === "EDIT") {
-        await axios.put(`https://rayhanaboutique.online/clients/${record._id}`, values);
+        await axios.put(`http://127.0.0.1:3000/clients/${record._id}`, values);
         message.success("Client mis à jour avec succès");
       } else {
-        await axios.post("https://rayhanaboutique.online/clients", values);
+        await axios.post("http://127.0.0.1:3000/clients", values);
         message.success("Client créé avec succès");
       }
 

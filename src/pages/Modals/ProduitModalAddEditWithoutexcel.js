@@ -42,13 +42,13 @@ import {
     const [images, setimages] = useState([]);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewImage, setPreviewImage] = useState("");
-    const serverURL = "https://rayhanaboutique.online";
+    const serverURL = "http://127.0.0.1:3000";
   
     const [form] = useForm();
   
     useEffect(() => {
       axios
-        .get("https://rayhanaboutique.online/categories")
+        .get("http://127.0.0.1:3000/categories")
         .then((response) => {
           console.log("response", response);
           if (response.data.data) {
@@ -59,7 +59,7 @@ import {
         });
   
       axios
-        .get("https://rayhanaboutique.online/collection")
+        .get("http://127.0.0.1:3000/collection")
         .then((response) => {
           console.log("response", response);
           if (response.data.data) {
@@ -131,7 +131,7 @@ import {
             const Listimages = oldimges[key];
   
             Listimages.push(
-              "https://rayhanaboutique.online" + "/images/" + el?.name
+              "http://127.0.0.1:3000" + "/images/" + el?.name
             );
             setimages(oldimges);
   
@@ -142,7 +142,7 @@ import {
             listOfPromise.push(
               axios({
                 method: "post",
-                url: "https://rayhanaboutique.online" + col,
+                url: "http://127.0.0.1:3000" + col,
                 data: bodyFormData,
                 headers: { "Content-Type": "multipart/form-data" },
               })
@@ -180,7 +180,7 @@ import {
       }));
       if (props.type === "EDIT") {
         await axios
-          .put("https://rayhanaboutique.online/products/" + values.id, {
+          .put("http://127.0.0.1:3000/products/" + values.id, {
             name: values.name,
             description: values.description,
             detail: values.detail,
@@ -199,7 +199,7 @@ import {
           });
       } else {
         await axios
-          .post("https://rayhanaboutique.online/products", {
+          .post("http://127.0.0.1:3000/products", {
             name: values.name,
             description: values.description,
             detail: values.detail,

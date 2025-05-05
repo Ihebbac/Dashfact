@@ -31,7 +31,7 @@ const CollectionModalAddEdit = (props) => {
   const [Loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
-  const serverURL = "https://rayhanaboutique.online";
+  const serverURL = "http://127.0.0.1:3000";
 
   const [form] = useForm();
 
@@ -65,7 +65,7 @@ const CollectionModalAddEdit = (props) => {
           !listfilesuploaded?.find(
             (val) =>
               val ===
-              "https://rayhanaboutique.online" + "/images/" + el?.originFileObj?.name
+              "http://127.0.0.1:3000" + "/images/" + el?.originFileObj?.name
           )
         ) {
           console.log("eeeeeeeeee");
@@ -75,13 +75,13 @@ const CollectionModalAddEdit = (props) => {
           form.setFieldsValue({
             images: [
               ...form.getFieldValue("images"),
-              "https://rayhanaboutique.online" + "/images/" + el?.originFileObj.name,
+              "http://127.0.0.1:3000" + "/images/" + el?.originFileObj.name,
             ],
           });
           listOfPromise.push(
             axios({
               method: "post",
-              url: "https://rayhanaboutique.online" + "/api/upload",
+              url: "http://127.0.0.1:3000" + "/api/upload",
               data: bodyFormData,
               headers: { "Content-Type": "multipart/form-data" },
             })
@@ -112,7 +112,7 @@ const CollectionModalAddEdit = (props) => {
     const img = form.getFieldValue("images");
     if (props.type === "EDIT") {
       await axios
-        .put("https://rayhanaboutique.online/collection/" + values.id, {
+        .put("http://127.0.0.1:3000/collection/" + values.id, {
           name: values?.name,
           description: values?.description,
           thumbnailImage: img[0],
@@ -129,7 +129,7 @@ const CollectionModalAddEdit = (props) => {
     } else {
       console.log("from", form.getFieldValue("data"));
       await axios
-        .post("https://rayhanaboutique.online/collection", {
+        .post("http://127.0.0.1:3000/collection", {
           name: values?.name,
           description: values?.description,
           thumbnailImage: img[0],

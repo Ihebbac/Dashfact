@@ -38,10 +38,10 @@ const AddOrUpdateAdmin = (props) => {
     setLoading(true);
     try {
       if (type === "EDIT") {
-        await axios.put(`https://rayhanaboutique.online/api/user/${record._id}`, values);
+        await axios.put(`http://127.0.0.1:3000/api/user/${record._id}`, values);
         notification.success({ message: "Utilisateur modifié avec succès" });
       } else {
-        await axios.post("https://rayhanaboutique.online/api/auth/add", values);
+        await axios.post("http://127.0.0.1:3000/api/auth/add", values);
         notification.success({ message: "Utilisateur créé avec succès" });
       }
       refetech();

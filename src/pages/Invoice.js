@@ -34,6 +34,7 @@ import dayjs from "dayjs";
 import InvoiceModalAddEdit from "./Modals/InvoiceModalAddEdit";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import ClientInvoicesModal from "./Modals/ClientInvoicesModal";
 
 const { confirm } = Modal;
 const { Option } = Select;
@@ -56,6 +57,8 @@ const Invoice = () => {
   const [dateRange, setDateRange] = useState([]);
   const [statusFilter, setStatusFilter] = useState(null);
 
+  const [modalVisible, setModalVisible] = useState(false);
+
   const abilities = JSON.parse(localStorage.getItem("user"))?.abilities?.find(
     (el) => el.page === "invoice"
   )?.can;
@@ -68,7 +71,7 @@ const Invoice = () => {
   }, [refetech]);
 
   const fetchData = () => {
-    axios.get("https://rayhanaboutique.online/invoice").then((response) => {
+    axios.get("http://127.0.0.1:3000/invoice").then((response) => {
       if (response.data) {
         setSearch("");
         let sorted_obj = _.sortBy(response.data, function (o) {
@@ -83,19 +86,19 @@ const Invoice = () => {
   };
 
   const fetchCustomers = () => {
-    axios.get("https://rayhanaboutique.online/clients").then((response) => {
+    axios.get("http://127.0.0.1:3000/clients").then((response) => {
       setCustomers(response.data);
     });
   };
 
   const fetchStore = () => {
-    axios.get("https://rayhanaboutique.online/magasins").then((response) => {
+    axios.get("http://127.0.0.1:3000/magasins").then((response) => {
       setStore(response.data);
     });
   };
 
   const fetchProducts = () => {
-    axios.get("https://rayhanaboutique.online/stock").then((response) => {
+    axios.get("http://127.0.0.1:3000/stock").then((response) => {
       setProducts(response.data);
     });
   };
@@ -110,7 +113,7 @@ const Invoice = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete("https://rayhanaboutique.online/invoice/" + dataDelete)
+          .delete("http://127.0.0.1:3000/invoice/" + dataDelete)
           .then((response) => {
             message.success("Facture supprimée avec succès.");
             handrefetech();
@@ -655,6 +658,7 @@ const Invoice = () => {
         <Space>
           <Button
             onClick={() => {
+              console.log("tttttttt", record);
               setVisible(true);
               setrecord(record);
               setAction("EDIT");
@@ -705,6 +709,10 @@ const Invoice = () => {
               title="Liste des factures"
               extra={
                 <Space>
+                  <Button onClick={() => setModalVisible(true)}>
+                    Voir les détails clients
+                  </Button>
+
                   <Input
                     placeholder="Rechercher par numéro ou client"
                     style={{ marginRight: 10, width: 200 }}
@@ -773,6 +781,12 @@ const Invoice = () => {
           products={products}
           stores={stores}
           onCancel={() => setVisible(false)}
+        />
+
+        <ClientInvoicesModal
+          visible={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          invoices={data}
         />
       </div>
     </>

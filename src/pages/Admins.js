@@ -9,8 +9,11 @@ import {
   Space,
   Descriptions,
   Avatar,
-  Badge,
+  Tag,
   notification,
+  Select,
+  Form,
+  Input,
 } from "antd";
 import {
   DeleteTwoTone,
@@ -18,65 +21,287 @@ import {
   InfoCircleOutlined,
   ExclamationCircleOutlined,
   UserOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import AddOrUpdateAdmin from "./Modals/AdminModalAddEdit.js";
 
 const { Text } = Typography;
+const { Option } = Select;
 const { confirm } = Modal;
+const { Password } = Input;
+
+const statusOptions = [
+  { value: "active", label: "Actif" },
+  { value: "inactive", label: "Inactif" },
+];
+
+const roleOptions = [
+  { value: "user", label: "Utilisateur" },
+  { value: "admin", label: "Administrateur" },
+];
+
+const UserModalAddEdit = ({
+  visible,
+  record,
+  refetech,
+  type,
+  onCancel,
+  stores,
+}) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (type === "EDIT" && record) {
+      // Convert magasinId to array if it's not already
+      const magasinId = record.magasinId
+        ? Array.isArray(record.magasinId)
+          ? record.magasinId
+          : [record.magasinId]
+        : [];
+
+      form.setFieldsValue({
+        ...record,
+        magasinId,
+      });
+    } else {
+      form.resetFields();
+    }
+  }, [visible, record, type]);
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      const payload = {
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        status: values.status,
+        type: values.type,
+        magasinId: values.magasinId || [],
+      };
+
+      if (type === "EDIT") {
+        await axios.put(
+          `http://127.0.0.1:3000/api/user/${record._id}`,
+          payload
+        );
+        notification.success({ message: "Utilisateur mis à jour avec succès" });
+      } else {
+        await axios.post("http://127.0.0.1:3000/api/user", payload);
+        notification.success({ message: "Utilisateur créé avec succès" });
+      }
+
+      refetech();
+      onCancel();
+    } catch (error) {
+      console.error("Error:", error);
+      notification.error({
+        message: "Erreur",
+        description: error.response?.data?.message || error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      title={
+        type === "EDIT" ? "Modifier l'utilisateur" : "Créer un utilisateur"
+      }
+      onCancel={onCancel}
+      footer={[
+        <Button key="back" onClick={onCancel}>
+          Annuler
+        </Button>,
+        <Button
+          key="submit"
+          type="primary"
+          loading={loading}
+          onClick={handleSubmit}
+        >
+          Enregistrer
+        </Button>,
+      ]}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item
+          name="username"
+          label="Nom d'utilisateur"
+          rules={[{ required: true, message: "Ce champ est requis" }]}
+        >
+          <Input />
+        </Form.Item>
+
+        <Form.Item
+          name="email"
+          label="Email"
+          rules={[
+            { required: true, message: "Ce champ est requis" },
+            { type: "email", message: "Email invalide" },
+          ]}
+        >
+          <Input />
+        </Form.Item>
+
+        {type !== "EDIT" && (
+          <Form.Item
+            name="password"
+            label="Mot de passe"
+            rules={[{ required: true, message: "Ce champ est requis" }]}
+          >
+            <Password />
+          </Form.Item>
+        )}
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="type"
+              label="Rôle"
+              initialValue="user"
+              rules={[{ required: true, message: "Ce champ est requis" }]}
+            >
+              <Select>
+                {roleOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="status"
+              label="Statut"
+              initialValue="active"
+              rules={[{ required: true, message: "Ce champ est requis" }]}
+            >
+              <Select>
+                {statusOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item
+          name="magasinId"
+          label="Magasins assignés"
+          tooltip="Optionnel - sélectionnez un ou plusieurs magasins"
+        >
+          <Select
+            mode="multiple"
+            allowClear
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
+            suffixIcon={<ShopOutlined />}
+          >
+            {stores.map((store) => (
+              <Option key={store._id} value={store._id}>
+                {store.nom}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
 
 const Admins = () => {
-  const [data, setData] = useState([]);
-  const [refetech, setrefetech] = useState(false);
-  const [isload, setisload] = useState(true);
-  const [visible, setVisible] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [stores, setStores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [action, setAction] = useState("");
-  const [record, setrecord] = useState({});
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState({});
 
-  const handrefetech = () => {
-    setrefetech(!refetech);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [usersRes, storesRes] = await Promise.all([
+        axios.get("http://127.0.0.1:3000/api/user"),
+        axios.get("http://127.0.0.1:3000/magasins"),
+      ]);
+
+      setUsers(usersRes.data);
+      setStores(storesRes.data);
+    } catch (error) {
+      notification.error({
+        message: "Erreur de chargement des données",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const showPromiseConfirm = (alldata, dataDelete) => {
+  const handleDelete = (user) => {
     confirm({
-      title: "Voulez-vous supprimer l'utilisateur " + alldata.username + " ?",
+      title: `Supprimer l'utilisateur ${user.username} ?`,
       icon: <ExclamationCircleOutlined />,
       async onOk() {
-        setisload(true);
-        await axios
-          .delete(`https://rayhanaboutique.online/users/${alldata._id}`)
-          .then(function (response) {
-            handrefetech();
-            setisload(false);
-            notification.success({
-              message: "Utilisateur supprimé avec succès",
-            });
-          })
-          .catch(function (err) {
-            console.log(err);
-            setisload(false);
-            notification.error({
-              message: "Erreur lors de la suppression",
-            });
+        try {
+          setLoading(true);
+          await axios.delete(`http://127.0.0.1:3000/users/${user._id}`);
+          notification.success({
+            message: "Utilisateur supprimé avec succès",
           });
+          fetchData();
+        } catch (error) {
+          notification.error({
+            message: "Erreur lors de la suppression",
+            description: error.message,
+          });
+        } finally {
+          setLoading(false);
+        }
       },
-      onCancel() {},
     });
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const columns = [
     {
       title: "ID",
       dataIndex: "_id",
       key: "_id",
-      render: (id) => <Text ellipsis>{id}</Text>,
+      render: (id) => <Text ellipsis>{id.substring(0, 8)}...</Text>,
+      width: 120,
     },
     {
-      title: "Nom d'utilisateur",
+      title: "Utilisateur",
       dataIndex: "username",
       key: "username",
+      render: (text, record) => (
+        <Space>
+          <Avatar
+            style={{
+              backgroundColor:
+                record.status === "active" ? "#87d068" : "#f5222d",
+            }}
+            icon={<UserOutlined />}
+          />
+          <Text strong>{text}</Text>
+        </Space>
+      ),
     },
     {
       title: "Email",
@@ -85,36 +310,73 @@ const Admins = () => {
       ellipsis: true,
     },
     {
-      title: "Type",
+      title: "Rôle",
       dataIndex: "type",
       key: "type",
       render: (type) => (
-        <Badge status={type === "admin" ? "success" : "default"} text={type} />
+        <Tag color={type === "admin" ? "geekblue" : "green"}>{type}</Tag>
       ),
+      filters: [
+        { text: "Admin", value: "admin" },
+        { text: "Utilisateur", value: "user" },
+      ],
+      onFilter: (value, record) => record.type === value,
     },
     {
       title: "Statut",
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Badge
-          status={status === "active" ? "success" : "error"}
-          text={status}
-        />
+        <Tag color={status === "active" ? "success" : "error"}>
+          {status === "active" ? "Actif" : "Inactif"}
+        </Tag>
       ),
+      filters: [
+        { text: "Actif", value: "active" },
+        { text: "Inactif", value: "inactive" },
+      ],
+      onFilter: (value, record) => record.status === value,
+    },
+    {
+      title: "Magasins",
+      dataIndex: "magasinId",
+      key: "magasinId",
+      render: (magasinIds) => {
+        // Ensure magasinIds is always an array
+        const ids = Array.isArray(magasinIds)
+          ? magasinIds
+          : magasinIds
+          ? [magasinIds]
+          : [];
+        return (
+          <Space size={[0, 8]} wrap>
+            {ids.length > 0 ? (
+              ids.map((id) => {
+                const store = stores.find((s) => s._id === id);
+                return store ? (
+                  <Tag key={id} icon={<ShopOutlined />}>
+                    {store.nom}
+                  </Tag>
+                ) : null;
+              })
+            ) : (
+              <Tag>Non assigné</Tag>
+            )}
+          </Space>
+        );
+      },
     },
     {
       title: "Actions",
-      key: "action",
-      width: 200,
-      fixed: "right",
+      key: "actions",
+      width: 150,
       render: (_, record) => (
-        <Space size="middle">
+        <Space>
           <Button
             onClick={() => {
-              setVisible(true);
-              setrecord(record);
+              setSelectedUser(record);
               setAction("EDIT");
+              setModalVisible(true);
             }}
           >
             <EditTwoTone />
@@ -122,117 +384,127 @@ const Admins = () => {
 
           <Button
             onClick={() => {
-              setIsModalOpen(true);
-              setrecord(record);
+              setSelectedUser(record);
+              setDetailModalVisible(true);
             }}
           >
             <InfoCircleOutlined />
           </Button>
 
-          <Button danger onClick={() => showPromiseConfirm(record, record._id)}>
-            <DeleteTwoTone twoToneColor="#FFFFFF" />
+          <Button danger onClick={() => handleDelete(record)}>
+            <DeleteTwoTone />
           </Button>
         </Space>
       ),
     },
   ];
 
-  useEffect(() => {
-    setisload(true);
-    axios
-      .get("https://rayhanaboutique.online/api/user")
-      .then((response) => {
-        if (response.data) {
-          setData(response.data);
-        } else {
-          notification.error({ message: "Aucune donnée trouvée" });
-        }
-      })
-      .catch((error) => {
-        notification.error({ message: "Erreur de chargement des données" });
-      })
-      .finally(() => {
-        setisload(false);
-      });
-  }, [refetech]);
-
   return (
-    <>
-      <div className="tabled">
-        <Row gutter={[24, 0]}>
-          <Col xs="24" xl={24}>
-            <Card
-              bordered={false}
-              loading={isload}
-              className="criclebox tablespace mb-24"
-              title="Gestion des utilisateurs"
-              extra={
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    setVisible(true);
-                    setrecord({});
-                    setAction("ADD");
-                  }}
-                >
-                  Ajouter un utilisateur
-                </Button>
-              }
+    <div className="tabled">
+      <Row gutter={[24, 0]}>
+        <Col xs="24" xl={24}>
+          <Card
+            bordered={false}
+            loading={loading}
+            className="criclebox tablespace mb-24"
+            title="Gestion des utilisateurs"
+            extra={
+              <Button
+                type="primary"
+                onClick={() => {
+                  setSelectedUser({});
+                  setAction("ADD");
+                  setModalVisible(true);
+                }}
+              >
+                Ajouter un utilisateur
+              </Button>
+            }
+          >
+            <Table
+              columns={columns}
+              dataSource={users}
+              pagination={{ pageSize: 10 }}
+              rowKey="_id"
+              scroll={{ x: true }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <UserModalAddEdit
+        visible={modalVisible}
+        record={selectedUser}
+        refetech={fetchData}
+        type={action}
+        onCancel={() => setModalVisible(false)}
+        stores={stores}
+      />
+
+      <Modal
+        title="Détails de l'utilisateur"
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={null}
+        width={700}
+      >
+        <Descriptions bordered column={1}>
+          <Descriptions.Item label="Nom d'utilisateur">
+            <Space>
+              <Avatar
+                style={{
+                  backgroundColor:
+                    selectedUser?.status === "active" ? "#87d068" : "#f5222d",
+                }}
+                icon={<UserOutlined />}
+              />
+              <Text strong>{selectedUser?.username || "Non spécifié"}</Text>
+            </Space>
+          </Descriptions.Item>
+          <Descriptions.Item label="Email">
+            {selectedUser?.email || "Non spécifié"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Rôle">
+            <Tag color={selectedUser?.type === "admin" ? "geekblue" : "green"}>
+              {selectedUser?.type === "admin"
+                ? "Administrateur"
+                : "Utilisateur"}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="Statut">
+            <Tag
+              color={selectedUser?.status === "active" ? "success" : "error"}
             >
-              <Table
-                columns={columns}
-                dataSource={data}
-                pagination={{ pageSize: 10 }}
-                rowKey="_id"
-                scroll={{ x: true }}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        <AddOrUpdateAdmin
-          visible={visible}
-          record={action === "EDIT" ? record : {}}
-          refetech={handrefetech}
-          type={action}
-          onCancel={() => setVisible(false)}
-        />
-
-        <Modal
-          title="Détails de l'utilisateur"
-          open={isModalOpen}
-          onCancel={() => setIsModalOpen(false)}
-          footer={null}
-        >
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label="Nom d'utilisateur">
-              <Space>
-                <Avatar
-                  style={{ backgroundColor: "#87d068" }}
-                  icon={<UserOutlined />}
-                />
-                <Text strong>{record?.username || "Non spécifié"}</Text>
+              {selectedUser?.status === "active" ? "Actif" : "Inactif"}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="Magasins assignés">
+            {selectedUser?.magasinId ? (
+              <Space wrap>
+                {(Array.isArray(selectedUser.magasinId)
+                  ? selectedUser.magasinId
+                  : [selectedUser.magasinId]
+                ).map((id) => {
+                  const store = stores.find((s) => s._id === id);
+                  return store ? (
+                    <Tag key={id} icon={<ShopOutlined />}>
+                      {store.nom}
+                    </Tag>
+                  ) : null;
+                })}
               </Space>
-            </Descriptions.Item>
-            <Descriptions.Item label="Email">
-              {record?.email || <Badge status="error" text="Non spécifié" />}
-            </Descriptions.Item>
-            <Descriptions.Item label="Type">
-              <Badge
-                status={record?.type === "admin" ? "success" : "default"}
-                text={record?.type || "user"}
-              />
-            </Descriptions.Item>
-            <Descriptions.Item label="Statut">
-              <Badge
-                status={record?.status === "active" ? "success" : "error"}
-                text={record?.status || "inactive"}
-              />
-            </Descriptions.Item>
-          </Descriptions>
-        </Modal>
-      </div>
-    </>
+            ) : (
+              <Tag>Non assigné</Tag>
+            )}
+          </Descriptions.Item>
+          <Descriptions.Item label="Date de création">
+            {selectedUser?.createdAt
+              ? new Date(selectedUser.createdAt).toLocaleString()
+              : "Inconnue"}
+          </Descriptions.Item>
+        </Descriptions>
+      </Modal>
+    </div>
   );
 };
 

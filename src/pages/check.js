@@ -69,7 +69,7 @@ const Check = () => {
 
   useEffect(() => {
     axios
-      .get("https://rayhanaboutique.online/checks")
+      .get("http://127.0.0.1:3000/checks")
       .then((response) => {
         if (response.data) {
           setSearch("");
@@ -98,7 +98,7 @@ const Check = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete(`https://rayhanaboutique.online/checks/${checkData._id}`)
+          .delete(`http://127.0.0.1:3000/checks/${checkData._id}`)
           .then((response) => {
             message.success("Chèque supprimé avec succès");
             handleRefetch();

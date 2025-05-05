@@ -25,7 +25,6 @@ const statusOptions = [
   { value: "unpaid", label: "Non Payée", color: "red" },
   { value: "partially_paid", label: "Partiellement Payée", color: "orange" },
   { value: "paid", label: "Payée", color: "green" },
-  { value: "cancelled", label: "Annulée", color: "gray" },
 ];
 
 const InvoiceModalAddEdit = ({
@@ -41,21 +40,34 @@ const InvoiceModalAddEdit = ({
   const [form] = Form.useForm();
   const [items, setItems] = useState([]);
   const [subtotal, setSubtotal] = useState(0);
+  const [payed, setPayed] = useState(0);
+  const [notPayed, setNotPayed] = useState(0);
   const [tax, setTax] = useState(0);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("unpaid");
 
+  console.log("dddddddddddddddddddd", record);
+
   useEffect(() => {
     if (type === "EDIT" && record) {
       form.setFieldsValue({
         ...record,
-        date: dayjs(record.date) || new Date(),
-        customerId: record?.customerId || null,
+        date: dayjs(record.date),
+        customerId: record.customerId || null,
+        magasinId: record.magasinId || null,
+        customerName: record.customerName,
+        customerAddress: record.customerAddress,
+        customerPhone: record.customerPhone,
         status: record.status || "unpaid",
+        notpayed: record.notpayed || 0,
+        payed: record.payed || 0,
+        notes: record.notes || "",
       });
       setItems(record.items || []);
       setStatus(record.status || "unpaid");
+      setPayed(record.payed || 0);
+      setNotPayed(record.notpayed || 0);
       calculateTotals(record.items || []);
     } else {
       form.resetFields();
@@ -63,7 +75,9 @@ const InvoiceModalAddEdit = ({
       setSubtotal(0);
       setTax(0);
       setTotal(0);
-      setStatus("unpaid");
+      setStatus("paid");
+      setPayed(0);
+      setNotPayed(0);
     }
   }, [visible, record, type]);
 
@@ -78,6 +92,18 @@ const InvoiceModalAddEdit = ({
     setSubtotal(newSubtotal);
     setTax(newTax);
     setTotal(newTotal);
+
+    if (type === "EDIT") {
+      setNotPayed(Math.max(0, newTotal - payed));
+      setPayed(newTotal);
+    } else {
+      setPayed(newTotal);
+      setNotPayed(0);
+      form.setFieldsValue({
+        payed: newTotal,
+        notpayed: 0,
+      });
+    }
   };
 
   const handleAddItem = () => {
@@ -85,7 +111,7 @@ const InvoiceModalAddEdit = ({
       ...items,
       {
         stockId: null,
-        magasinId: null,
+        magasinId: stores[0]?._id || null,
         reference: "",
         nom: "",
         taille: 0,
@@ -133,8 +159,51 @@ const InvoiceModalAddEdit = ({
     }
   };
 
+  const handlestoresChange = (customerId) => {
+    const customer = stores.find((c) => c._id === customerId);
+    if (customer) {
+      form.setFieldsValue({
+        magasinId: customer._id,
+      });
+    }
+  };
+
   const handleStatusChange = (value) => {
     setStatus(value);
+    if (value === "paid") {
+      setPayed(total);
+      setNotPayed(0);
+      form.setFieldsValue({
+        payed: total,
+        notpayed: 0,
+      });
+    } else if (value === "unpaid") {
+      setPayed(0);
+      setNotPayed(total);
+      form.setFieldsValue({
+        payed: 0,
+        notpayed: total,
+      });
+    }
+  };
+
+  const handlePayedChange = (value) => {
+    const newPayed = Number(value) || 0;
+    const newNotPayed = Math.max(0, total - newPayed);
+
+    setPayed(newPayed);
+    setNotPayed(newNotPayed);
+    form.setFieldsValue({
+      notpayed: newNotPayed,
+    });
+
+    if (newPayed >= total) {
+      setStatus("paid");
+    } else if (newPayed > 0) {
+      setStatus("partially_paid");
+    } else {
+      setStatus("unpaid");
+    }
   };
 
   const handleSubmit = async () => {
@@ -143,23 +212,39 @@ const InvoiceModalAddEdit = ({
       setLoading(true);
 
       const payload = {
-        ...values,
+        invoiceNumber: values.invoiceNumber,
         date: values.date.toISOString(),
+        customerId: values.customerId,
+        magasinId: values.magasinId,
+        customerName: values.customerName,
+        customerAddress: values.customerAddress,
+        customerPhone: values.customerPhone,
         items: items.map((item) => ({
-          ...item,
-          magasinId: item.magasinId || stores[0]?._id,
+          stockId: item.stockId,
+          magasinId: item.magasinId,
+          reference: item.reference,
+          nom: item.nom,
+          taille: item.taille,
+          quantity: item.quantity,
+          prixAchat: item.prixAchat,
+          prixVente: item.prixVente,
         })),
         subtotal,
         tax,
         total,
-        status: status, // Use the status state
+        notpayed: notPayed,
+        payed: payed,
+        status,
+        notes: values.notes,
       };
 
       if (type === "EDIT") {
-        await axios.put(`https://rayhanaboutique.online/invoice/${record._id}`, payload);
+        await axios.put(`http://127.0.0.1:3000/invoice/${record._id}`, payload);
+
+        console.log("eeeeeeeeeeeeeeee", payload);
         notification.success({ message: "Facture mise à jour avec succès" });
       } else {
-        await axios.post("https://rayhanaboutique.online/invoice", payload);
+        await axios.post("http://127.0.0.1:3000/invoice", payload);
         notification.success({ message: "Facture créée avec succès" });
       }
 
@@ -167,9 +252,9 @@ const InvoiceModalAddEdit = ({
       onCancel();
     } catch (error) {
       console.error("Error:", error);
-      notification.error({ 
-        message: "Erreur", 
-        description: error.response?.data?.message || error.message 
+      notification.error({
+        message: "Erreur",
+        description: error.response?.data?.message || error.message,
       });
     } finally {
       setLoading(false);
@@ -188,6 +273,9 @@ const InvoiceModalAddEdit = ({
           onChange={(val) => handleItemChange(index, "stockId", val)}
           showSearch
           optionFilterProp="children"
+          filterOption={(input, option) =>
+            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
         >
           {products.map((product) => (
             <Option key={product._id} value={product._id}>
@@ -206,8 +294,6 @@ const InvoiceModalAddEdit = ({
           value={value}
           style={{ width: "100%" }}
           onChange={(val) => handleItemChange(index, "magasinId", val)}
-          showSearch
-          optionFilterProp="children"
         >
           {stores.map((store) => (
             <Option key={store._id} value={store._id}>
@@ -276,6 +362,27 @@ const InvoiceModalAddEdit = ({
       ]}
     >
       <Form form={form} layout="vertical">
+        <Form.Item
+          name="magasinId"
+          label="Magasin"
+          rules={[{ required: true, message: "Ce champ est requis" }]}
+        >
+          <Select
+            showSearch
+            optionFilterProp="children"
+            onChange={handlestoresChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            {stores.map((customer) => (
+              <Option key={customer._id} value={customer._id}>
+                {customer.nom}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
@@ -292,33 +399,32 @@ const InvoiceModalAddEdit = ({
               label="Date"
               rules={[{ required: true, message: "Ce champ est requis" }]}
             >
-              <DatePicker
-                style={{ width: "100%" }}
-                disabled={type === "EDIT"}
-              />
+              <DatePicker style={{ width: "100%" }} />
             </Form.Item>
           </Col>
         </Row>
 
-        {type === "EDIT" && (
-          <Form.Item
-            name="status"
-            label="Statut"
-            rules={[{ required: true, message: "Ce champ est requis" }]}
+        <Form.Item
+          name="status"
+          label="Statut"
+          rules={[{ required: true, message: "Ce champ est requis" }]}
+        >
+          <Select
+            onChange={handleStatusChange}
+            value={status}
+            optionLabelProp="label"
           >
-            <Select
-              onChange={handleStatusChange}
-              value={status}
-              optionLabelProp="label"
-            >
-              {statusOptions.map((option) => (
-                <Option key={option.value} value={option.value} label={option.label}>
-                  <Tag color={option.color}>{option.label}</Tag>
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        )}
+            {statusOptions.map((option) => (
+              <Option
+                key={option.value}
+                value={option.value}
+                label={option.label}
+              >
+                <Tag color={option.color}>{option.label}</Tag>
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
 
         <Form.Item
           name="customerId"
@@ -329,6 +435,9 @@ const InvoiceModalAddEdit = ({
             showSearch
             optionFilterProp="children"
             onChange={handleCustomerChange}
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
           >
             {customers.map((customer) => (
               <Option key={customer._id} value={customer._id}>
@@ -384,6 +493,7 @@ const InvoiceModalAddEdit = ({
           pagination={false}
           rowKey={(record, index) => index}
           columns={columns}
+          style={{ marginTop: 16 }}
         />
 
         <Divider orientation="left">Total</Divider>
@@ -404,6 +514,55 @@ const InvoiceModalAddEdit = ({
                 <span>{total.toFixed(2)} TND</span>
               </div>
             </Space>
+          </Col>
+        </Row>
+
+        <Row gutter={16} style={{ marginTop: 16 }}>
+          <Col span={8}>
+            <Form.Item
+              name="payed"
+              label="Payé"
+              rules={[{ required: true, message: "Ce champ est requis" }]}
+            >
+              <InputNumber
+                style={{ width: "100%" }}
+                min={0}
+                max={total}
+                value={payed}
+                onChange={handlePayedChange}
+                formatter={(value) => `${value} TND`}
+                parser={(value) => value.replace(/ TND|€/g, "")}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item name="notpayed" label="Reste à payer">
+              <InputNumber
+                style={{ width: "100%" }}
+                value={notPayed}
+                disabled
+                formatter={(value) => `${value} TND`}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label="Statut de paiement">
+              <Tag
+                color={
+                  status === "paid"
+                    ? "green"
+                    : status === "partially_paid"
+                    ? "orange"
+                    : "red"
+                }
+              >
+                {status === "paid"
+                  ? "Payée"
+                  : status === "partially_paid"
+                  ? "Partiellement payée"
+                  : "Non payée"}
+              </Tag>
+            </Form.Item>
           </Col>
         </Row>
 

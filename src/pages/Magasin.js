@@ -10,7 +10,7 @@ import {
   notification,
   Space,
   Tag,
-  Avatar
+  Avatar,
 } from "antd";
 import {
   DeleteTwoTone,
@@ -42,7 +42,8 @@ const Magasin = () => {
   }, [refetch]);
 
   const fetchMagasins = () => {
-    axios.get("https://rayhanaboutique.online/magasins")
+    axios
+      .get("http://127.0.0.1:3000/magasins")
       .then((response) => {
         if (response.data) {
           setSearch("");
@@ -54,7 +55,9 @@ const Magasin = () => {
         }
       })
       .catch((error) => {
-        notification.error({ message: "Erreur lors du chargement des magasins" });
+        notification.error({
+          message: "Erreur lors du chargement des magasins",
+        });
       });
   };
 
@@ -67,13 +70,16 @@ const Magasin = () => {
       title: `Voulez-vous vraiment supprimer le magasin ${magasinData.nom}?`,
       icon: <ExclamationCircleOutlined />,
       onOk() {
-        axios.delete(`https://rayhanaboutique.online/magasins/${magasinData._id}`)
+        axios
+          .delete(`http://127.0.0.1:3000/magasins/${magasinData._id}`)
           .then(() => {
             notification.success({ message: "Magasin supprimé avec succès" });
             handleRefetch();
           })
           .catch(() => {
-            notification.error({ message: "Erreur lors de la suppression du magasin" });
+            notification.error({
+              message: "Erreur lors de la suppression du magasin",
+            });
           });
       },
     });
@@ -84,11 +90,12 @@ const Magasin = () => {
       setFilteredData(data);
       return;
     }
-    
+
     const results = data.filter(
       (item) =>
         item.nom.toLowerCase().includes(search.toLowerCase()) ||
-        (item.responsable && item.responsable.toLowerCase().includes(search.toLowerCase()))
+        (item.responsable &&
+          item.responsable.toLowerCase().includes(search.toLowerCase()))
     );
     setFilteredData(results);
   };
@@ -99,6 +106,16 @@ const Magasin = () => {
   };
 
   const columns = [
+    {
+      title: "Id de Magasin",
+      dataIndex: "_id",
+      key: "_id",
+      // render: (text, record) => (
+      //   <Space>
+      //     <Text strong>{text}</Text>
+      //   </Space>
+      // ),
+    },
     {
       title: "Nom du Magasin",
       dataIndex: "nom",
@@ -114,9 +131,7 @@ const Magasin = () => {
       title: "Responsable",
       dataIndex: "responsable",
       key: "responsable",
-      render: (text) => (
-        <Tag color="blue">{text || "Non spécifié"}</Tag>
-      ),
+      render: (text) => <Tag color="blue">{text || "Non spécifié"}</Tag>,
     },
     {
       title: "Actions",
@@ -162,7 +177,7 @@ const Magasin = () => {
                     onChange={(e) => setSearch(e.target.value)}
                     onPressEnter={handleSearch}
                   />
-                  
+
                   <Button
                     type="primary"
                     style={{ marginRight: 10 }}
@@ -171,14 +186,14 @@ const Magasin = () => {
                   >
                     Rechercher
                   </Button>
-                  
+
                   <Button
                     onClick={handleResetFilters}
                     style={{ marginRight: 10 }}
                   >
                     Réinitialiser
                   </Button>
-                  
+
                   <Button
                     type="primary"
                     onClick={() => {
@@ -201,14 +216,14 @@ const Magasin = () => {
                   className="ant-border-space"
                   rowKey="_id"
                   locale={{
-                    emptyText: "Aucun magasin trouvé"
+                    emptyText: "Aucun magasin trouvé",
                   }}
                 />
               </div>
             </Card>
           </Col>
         </Row>
-        
+
         <MagasinModalAddEdit
           visible={visible}
           record={record}
