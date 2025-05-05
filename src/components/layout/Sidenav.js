@@ -191,7 +191,7 @@ function Sidenav({ color }) {
         </Menu.Item>
 
         {/* Invoice - Admin only */}
-        {isAdmin && (
+       
           <Menu.Item key="11">
             <NavLink to="/Invoice">
               <span
@@ -205,10 +205,10 @@ function Sidenav({ color }) {
               <span className="label">Facture Client</span>
             </NavLink>
           </Menu.Item>
-        )}
+     
 
         {/* Clients - Admin only */}
-        {isAdmin && (
+    
           <Menu.Item key="20">
             <NavLink to="/customers">
               <span
@@ -222,7 +222,7 @@ function Sidenav({ color }) {
               <span className="label">Client</span>
             </NavLink>
           </Menu.Item>
-        )}
+        
 
         {/* Check - Admin only */}
         {isAdmin && (

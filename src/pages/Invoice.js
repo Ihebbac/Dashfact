@@ -59,9 +59,7 @@ const Invoice = () => {
 
   const [modalVisible, setModalVisible] = useState(false);
 
-  const abilities = JSON.parse(localStorage.getItem("user"))?.abilities?.find(
-    (el) => el.page === "invoice"
-  )?.can;
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchData();
@@ -76,7 +74,9 @@ const Invoice = () => {
         setSearch("");
         let sorted_obj = _.sortBy(response.data, function (o) {
           return Number(o._id);
-        });
+        }).filter((el) =>
+          user.type === "admin" ? true : user.magasinId.includes(el.magasinId)
+        );
         setData(sorted_obj);
         setfilterData(sorted_obj);
       } else {

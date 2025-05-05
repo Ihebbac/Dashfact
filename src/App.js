@@ -44,7 +44,7 @@ function App() {
           <ProtectedRoute exact path="/profile" component={Profile} />
 
           {/* Redirect all other routes to /dashboard */}
-          <Redirect from="*" to="/dashboard" />
+          <Redirect from="*" to="/produit" />
         </Main>
       </Switch>
     </div>

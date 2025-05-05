@@ -14,7 +14,7 @@ import {
   Badge,
   Select,
   Avatar,
-  message
+  message,
 } from "antd";
 import {
   DeleteTwoTone,
@@ -45,26 +45,73 @@ const Customers = () => {
   const [search, setSearch] = useState("");
   const [record, setRecord] = useState(null);
   const [refetch, setRefetch] = useState(false);
+  const [stores, setStores] = useState([]);
 
   useEffect(() => {
     fetchClients();
+    fetchMaga();
   }, [refetch]);
 
+
   const fetchClients = () => {
-    axios
-      .get("http://127.0.0.1:3000/clients")
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+    
+    // Get user's stores - ensure it's always an array
+    const userStoreIds = user.magasinId 
+      ? Array.isArray(user.magasinId) 
+        ? user.magasinId 
+        : [user.magasinId]
+      : [];
+  
+    axios.get("http://127.0.0.1:3000/clients")
       .then((response) => {
         if (response.data) {
-          setSearch("");
-          let sortedData = _.sortBy(response.data, (o) => o.nom.toLowerCase());
+          const filteredClients = response.data.filter(client => {
+            // Admin sees all clients
+            if (user.type === 'admin') return true;
+            
+            // Get client's stores - ensure array format
+            const clientStoreIds = client.magasinId
+              ? Array.isArray(client.magasinId)
+                ? client.magasinId
+                : [client.magasinId]
+              : [];
+            
+            // Check if ANY of client's stores match ANY of user's stores
+            return clientStoreIds.some(storeId => 
+              userStoreIds.includes(storeId)
+            );
+          });
+  
+          // Sort filtered clients by name
+          const sortedData = _.sortBy(filteredClients, (o) => o.nom.toLowerCase());
+          
           setData(sortedData);
           setFilteredData(sortedData);
+          setSearch("");
+        }
+      })
+      .catch((error) => {
+        notification.error({
+          message: "Erreur lors du chargement des données",
+        });
+      });
+  };
+
+  const fetchMaga = () => {
+    axios
+      .get("http://127.0.0.1:3000/magasins")
+      .then((response) => {
+        if (response.data) {
+          setStores(response.data);
         } else {
           notification.error({ message: "Aucune donnée trouvée" });
         }
       })
       .catch((error) => {
-        notification.error({ message: "Erreur lors du chargement des données" });
+        notification.error({
+          message: "Erreur lors du chargement des données",
+        });
       });
   };
 
@@ -95,7 +142,7 @@ const Customers = () => {
       setFilteredData(data);
       return;
     }
-    
+
     const results = data.filter(
       (item) =>
         item.nom.toLowerCase().includes(search.toLowerCase()) ||
@@ -209,9 +256,8 @@ const Customers = () => {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onPressEnter={handleSearch}
-                    
                   />
-                  
+
                   <Button
                     type="primary"
                     style={{ marginRight: 10 }}
@@ -220,13 +266,9 @@ const Customers = () => {
                   >
                     Rechercher
                   </Button>
-                  
-                  <Button
-                    onClick={handleResetFilters}
-                  >
-                    Réinitialiser
-                  </Button>
-                  
+
+                  <Button onClick={handleResetFilters}>Réinitialiser</Button>
+
                   <Button
                     type="primary"
                     style={{ marginLeft: 10 }}
@@ -250,16 +292,17 @@ const Customers = () => {
                   className="ant-border-space"
                   rowKey="_id"
                   locale={{
-                    emptyText: "Aucun client trouvé"
+                    emptyText: "Aucun client trouvé",
                   }}
                 />
               </div>
             </Card>
           </Col>
         </Row>
-        
+
         <ClientModalAddEdit
           visible={visible}
+          stores={stores}
           record={record}
           refetch={handleRefetch}
           action={action}
