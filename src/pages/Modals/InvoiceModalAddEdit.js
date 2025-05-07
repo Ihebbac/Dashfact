@@ -239,12 +239,12 @@ const InvoiceModalAddEdit = ({
       };
 
       if (type === "EDIT") {
-        await axios.put(`http://127.0.0.1:3000/invoice/${record._id}`, payload);
+        await axios.put(`https://rayhanaboutique.online/invoice/${record._id}`, payload);
 
         console.log("eeeeeeeeeeeeeeee", payload);
         notification.success({ message: "Facture mise à jour avec succès" });
       } else {
-        await axios.post("http://127.0.0.1:3000/invoice", payload);
+        await axios.post("https://rayhanaboutique.online/invoice", payload);
         notification.success({ message: "Facture créée avec succès" });
       }
 

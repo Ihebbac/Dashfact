@@ -86,12 +86,12 @@ const UserModalAddEdit = ({
 
       if (type === "EDIT") {
         await axios.put(
-          `http://127.0.0.1:3000/api/user/${record._id}`,
+          `https://rayhanaboutique.online/api/user/${record._id}`,
           payload
         );
         notification.success({ message: "Utilisateur mis à jour avec succès" });
       } else {
-        await axios.post("http://127.0.0.1:3000/api/user", payload);
+        await axios.post("https://rayhanaboutique.online/api/user", payload);
         notification.success({ message: "Utilisateur créé avec succès" });
       }
 
@@ -234,8 +234,8 @@ const Admins = () => {
     try {
       setLoading(true);
       const [usersRes, storesRes] = await Promise.all([
-        axios.get("http://127.0.0.1:3000/api/user"),
-        axios.get("http://127.0.0.1:3000/magasins"),
+        axios.get("https://rayhanaboutique.online/api/user"),
+        axios.get("https://rayhanaboutique.online/magasins"),
       ]);
 
       setUsers(usersRes.data);
@@ -257,7 +257,7 @@ const Admins = () => {
       async onOk() {
         try {
           setLoading(true);
-          await axios.delete(`http://127.0.0.1:3000/users/${user._id}`);
+          await axios.delete(`https://rayhanaboutique.online/users/${user._id}`);
           notification.success({
             message: "Utilisateur supprimé avec succès",
           });

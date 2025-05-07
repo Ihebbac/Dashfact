@@ -43,7 +43,7 @@ const Magasin = () => {
 
   const fetchMagasins = () => {
     axios
-      .get("http://127.0.0.1:3000/magasins")
+      .get("https://rayhanaboutique.online/magasins")
       .then((response) => {
         if (response.data) {
           setSearch("");
@@ -71,7 +71,7 @@ const Magasin = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete(`http://127.0.0.1:3000/magasins/${magasinData._id}`)
+          .delete(`https://rayhanaboutique.online/magasins/${magasinData._id}`)
           .then(() => {
             notification.success({ message: "Magasin supprimé avec succès" });
             handleRefetch();

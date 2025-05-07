@@ -38,7 +38,7 @@ const ProduitModalAddEdit = (props) => {
     const fetchMagasins = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:3000/magasins"
+          "https://rayhanaboutique.online/magasins"
         );
         setMagasins(response.data);
       } catch (err) {
@@ -66,7 +66,7 @@ const ProduitModalAddEdit = (props) => {
         // Initialize image preview if exists
         if (record.image) {
           setImagePreview(
-            `http://127.0.0.1:3000/upload/${record.image}`
+            `https://rayhanaboutique.online/upload/${record.image}`
           );
           setImageFile(record?.image);
         }
@@ -137,7 +137,7 @@ const ProduitModalAddEdit = (props) => {
       formData.append("file", imageFile);
 
       const response = await axios.post(
-        "http://127.0.0.1:3000/upload",
+        "https://rayhanaboutique.online/upload",
         formData,
         {
           headers: {
@@ -178,12 +178,12 @@ const ProduitModalAddEdit = (props) => {
 
       if (type === "EDIT") {
         await axios.put(
-          `http://127.0.0.1:3000/stock/${record._id}`,
+          `https://rayhanaboutique.online/stock/${record._id}`,
           payload
         );
         message.success("Produit mis à jour avec succès");
       } else {
-        await axios.post("http://127.0.0.1:3000/stock", payload);
+        await axios.post("https://rayhanaboutique.online/stock", payload);
         message.success("Produit créé avec succès");
       }
 
@@ -273,7 +273,7 @@ const ProduitModalAddEdit = (props) => {
     name: "file",
     multiple: false,
     showUploadList: false,
-    action: "http://127.0.0.1:3000/upload",
+    action: "https://rayhanaboutique.online/upload",
     beforeUpload: beforeUpload,
     onChange: handleImageChange,
     accept: "image/*",

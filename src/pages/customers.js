@@ -63,7 +63,7 @@ const Customers = () => {
         : [user.magasinId]
       : [];
   
-    axios.get("http://127.0.0.1:3000/clients")
+    axios.get("https://rayhanaboutique.online/clients")
       .then((response) => {
         if (response.data) {
           const filteredClients = response.data.filter(client => {
@@ -100,7 +100,7 @@ const Customers = () => {
 
   const fetchMaga = () => {
     axios
-      .get("http://127.0.0.1:3000/magasins")
+      .get("https://rayhanaboutique.online/magasins")
       .then((response) => {
         if (response.data) {
           setStores(response.data);
@@ -125,7 +125,7 @@ const Customers = () => {
       icon: <ExclamationCircleOutlined />,
       onOk() {
         axios
-          .delete(`http://127.0.0.1:3000/clients/${clientData._id}`)
+          .delete(`https://rayhanaboutique.online/clients/${clientData._id}`)
           .then(() => {
             message.success("Client supprimé avec succès");
             handleRefetch();

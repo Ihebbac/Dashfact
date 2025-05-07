@@ -43,10 +43,10 @@ const ClientModalAddEdit = ({ visible, record, refetch, action, stores, onCancel
       };
 
       if (action === "EDIT") {
-        await axios.put(`http://127.0.0.1:3000/clients/${record._id}`, payload);
+        await axios.put(`https://rayhanaboutique.online/clients/${record._id}`, payload);
         notification.success({ message: "Client mis à jour avec succès" });
       } else {
-        await axios.post("http://127.0.0.1:3000/clients", payload);
+        await axios.post("https://rayhanaboutique.online/clients", payload);
         notification.success({ message: "Client créé avec succès" });
       }
 

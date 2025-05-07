@@ -47,7 +47,7 @@ function Home() {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:3000/invoice");
+        const response = await axios.get("https://rayhanaboutique.online/invoice");
         setInvoices(response.data);
       } catch (error) {
         console.error("Error fetching invoices:", error);
