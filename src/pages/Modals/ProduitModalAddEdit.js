@@ -33,6 +33,8 @@ const ProduitModalAddEdit = (props) => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
   // Initialize form and quantities when modal becomes visible or record changes
   useEffect(() => {
     const fetchMagasins = async () => {
@@ -83,7 +85,7 @@ const ProduitModalAddEdit = (props) => {
     setQuantities([
       ...quantities,
       {
-        magasinId: null,
+        magasinId: user?.magasinId[0],
         quantiteInitiale: 0,
         quantiteVendue: 0,
         quantitePerdue: 0,
@@ -205,6 +207,7 @@ const ProduitModalAddEdit = (props) => {
       dataIndex: "magasinId",
       render: (_, __, index) => (
         <Select
+          disabled={user.type === "user"}
           value={quantities[index]?.magasinId}
           onChange={(value) => handleQuantityChange(index, "magasinId", value)}
           placeholder="Sélectionner un magasin"
