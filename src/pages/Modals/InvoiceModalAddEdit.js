@@ -48,14 +48,14 @@ const InvoiceModalAddEdit = ({
   const [status, setStatus] = useState("unpaid");
 
   console.log("dddddddddddddddddddd", record);
-
+  const user = JSON.parse(localStorage.getItem("user"));
   useEffect(() => {
     if (type === "EDIT" && record) {
       form.setFieldsValue({
         ...record,
         date: dayjs(record.date),
         customerId: record.customerId || null,
-        magasinId: record.magasinId || null,
+        magasinId: record.magasinId._id || user?.magasinId[0],
         customerName: record.customerName,
         customerAddress: record.customerAddress,
         customerPhone: record.customerPhone,
@@ -71,6 +71,9 @@ const InvoiceModalAddEdit = ({
       calculateTotals(record.items || []);
     } else {
       form.resetFields();
+      form.setFieldsValue({
+        magasinId: user?.magasinId[0],
+      });
       setItems([]);
       setSubtotal(0);
       setTax(0);
@@ -239,12 +242,32 @@ const InvoiceModalAddEdit = ({
       };
 
       if (type === "EDIT") {
-        await axios.put(`https://rayhanaboutique.online/invoice/${record._id}`, payload);
-
-        console.log("eeeeeeeeeeeeeeee", payload);
+        await axios.put(
+          `https://rayhanaboutique.online/invoice/${record._id}`,
+          payload
+        );
         notification.success({ message: "Facture mise à jour avec succès" });
       } else {
-        await axios.post("https://rayhanaboutique.online/invoice", payload);
+        let customerId = values.customerId;
+
+        if (!values.customerId) {
+          const res = await axios.post(
+            "https://rayhanaboutique.online/clients",
+            {
+              adresse: values.customerAddress,
+              telephone: values.customerPhone,
+              nom: values.customerName,
+              magasinId: [values.magasinId],
+            }
+          );
+
+          customerId = res?.data?._id;
+        }
+
+        await axios.post("https://rayhanaboutique.online/invoice", {
+          ...payload,
+          customerId: customerId,
+        });
         notification.success({ message: "Facture créée avec succès" });
       }
 
@@ -369,6 +392,7 @@ const InvoiceModalAddEdit = ({
         >
           <Select
             showSearch
+            disabled={user?.type === "user"}
             optionFilterProp="children"
             onChange={handlestoresChange}
             filterOption={(input, option) =>
@@ -429,7 +453,7 @@ const InvoiceModalAddEdit = ({
         <Form.Item
           name="customerId"
           label="Client"
-          rules={[{ required: true, message: "Ce champ est requis" }]}
+          rules={[{ required: false, message: "Ce champ est requis" }]}
         >
           <Select
             showSearch

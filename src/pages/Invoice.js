@@ -35,6 +35,7 @@ import InvoiceModalAddEdit from "./Modals/InvoiceModalAddEdit";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import ClientInvoicesModal from "./Modals/ClientInvoicesModal";
+import MagasinIdInvoicesModal from "./Modals/MagasinIdInvoicesModal";
 
 const { confirm } = Modal;
 const { Option } = Select;
@@ -58,6 +59,7 @@ const Invoice = () => {
   const [statusFilter, setStatusFilter] = useState(null);
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible2, setModalVisible2] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -75,7 +77,7 @@ const Invoice = () => {
         let sorted_obj = _.sortBy(response.data, function (o) {
           return Number(o._id);
         }).filter((el) =>
-          user.type === "admin" ? true : user.magasinId.includes(el.magasinId)
+          user.type === "admin" ? true : user.magasinId.includes(el.magasinId._id)
         );
         setData(sorted_obj);
         setfilterData(sorted_obj);
@@ -713,6 +715,10 @@ const Invoice = () => {
                     Voir les détails clients
                   </Button>
 
+                  <Button onClick={() => setModalVisible2(true)}>
+                    Voir les détails par Magasin
+                  </Button>
+
                   <Input
                     placeholder="Rechercher par numéro ou client"
                     style={{ marginRight: 10, width: 200 }}
@@ -786,6 +792,11 @@ const Invoice = () => {
         <ClientInvoicesModal
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}
+          invoices={data}
+        />
+        <MagasinIdInvoicesModal
+          visible={modalVisible2}
+          onCancel={() => setModalVisible2(false)}
           invoices={data}
         />
       </div>
