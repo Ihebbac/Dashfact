@@ -61,9 +61,12 @@ const Produit = () => {
         setSearch("");
         setfilterData([]);
 
-        const data = response.data.filter(
-          (el) => el.quantite[0].magasinId === user.magasinId[0]
-        );
+        const data =
+          user.type === "user"
+            ? response.data.filter(
+                (el) => el.quantite[0].magasinId === user.magasinId[0]
+              )
+            : response.data;
 
         let sorted_obj = _.sortBy(data, function (o) {
           return Number(o._id);
