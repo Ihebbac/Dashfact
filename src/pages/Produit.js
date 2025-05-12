@@ -49,6 +49,8 @@ const Produit = () => {
     (el) => el.page === "produit"
   )?.can;
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
   useEffect(() => {
     fetchData();
   }, [refetech]);
@@ -58,7 +60,12 @@ const Produit = () => {
       if (response.data) {
         setSearch("");
         setfilterData([]);
-        let sorted_obj = _.sortBy(response.data, function (o) {
+
+        const data = response.data.filter(
+          (el) => el.quantite[0].magasinId === user.magasinId[0]
+        );
+
+        let sorted_obj = _.sortBy(data, function (o) {
           return Number(o._id);
         });
         setData(sorted_obj);
