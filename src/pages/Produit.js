@@ -330,7 +330,9 @@ const Produit = () => {
                           </Col>
 
                           <Col span={8}>
-                            <Text strong>Stock disponible:</Text>
+                            <Text strong>
+                              Stock disponible: {availableStock}
+                            </Text>
                             <Badge
                               count={availableStock}
                               style={{
