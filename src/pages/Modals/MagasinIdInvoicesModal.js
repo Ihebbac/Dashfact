@@ -7,8 +7,8 @@ const { Text, Title } = Typography;
 const MagasinIdInvoicesModal = ({ visible, onCancel, invoices }) => {
   // Group invoices by customer
   const customerStats = invoices.reduce((acc, invoice) => {
-    if (!acc[invoice.magasinId._id]) {
-      acc[invoice.magasinId._id] = {
+    if (!acc[invoice?.magasinId?._id]) {
+      acc[invoice?.magasinId?._id] = {
         magasin:invoice.magasinId,
         customerId: invoice.customerId,
         customerName: invoice.customerName,
@@ -22,11 +22,11 @@ const MagasinIdInvoicesModal = ({ visible, onCancel, invoices }) => {
       };
     }
 
-    acc[invoice.magasinId._id].totalInvoices += 1;
-    acc[invoice.magasinId._id].totalAmount += invoice.total;
-    acc[invoice.magasinId._id].totalPayed += invoice.payed;
-    acc[invoice.magasinId._id].totalNotPayed += invoice.notpayed;
-    acc[invoice.magasinId._id].invoices.push(invoice);
+    acc[invoice?.magasinId?._id].totalInvoices += 1;
+    acc[invoice?.magasinId?._id].totalAmount += invoice.total;
+    acc[invoice?.magasinId?._id].totalPayed += invoice.payed;
+    acc[invoice?.magasinId?._id].totalNotPayed += invoice.notpayed;
+    acc[invoice?.magasinId?._id].invoices.push(invoice);
 
     return acc;
   }, {});
@@ -40,7 +40,7 @@ const MagasinIdInvoicesModal = ({ visible, onCancel, invoices }) => {
       key: "magasinId",
       render: (text, record) => (
         <div>
-          <Text type="secondary">{record.magasin.nom}</Text>
+          <Text type="secondary">{record.magasin && record.magasin.nom}</Text>
         </div>
       ),
     },

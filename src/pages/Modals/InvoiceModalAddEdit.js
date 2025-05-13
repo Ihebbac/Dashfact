@@ -55,7 +55,8 @@ const InvoiceModalAddEdit = ({
         ...record,
         date: dayjs(record.date),
         customerId: record.customerId || null,
-        magasinId: record.magasinId._id || user?.magasinId[0],
+        magasinId:
+          record.magasinId && (record?.magasinId?._id || user?.magasinId[0]),
         customerName: record.customerName,
         customerAddress: record.customerAddress,
         customerPhone: record.customerPhone,
@@ -359,7 +360,9 @@ const InvoiceModalAddEdit = ({
           type="text"
           icon={<MinusOutlined />}
           onClick={() => handleRemoveItem(index)}
-        />
+        >
+          Supprimer
+        </Button>
       ),
     },
   ];

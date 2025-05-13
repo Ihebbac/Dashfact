@@ -85,7 +85,7 @@ const ProduitModalAddEdit = (props) => {
     setQuantities([
       ...quantities,
       {
-        magasinId: user?.magasinId[0],
+        magasinId: user.type === "user" ? user?.magasinId[0] : null,
         quantiteInitiale: 0,
         quantiteVendue: 0,
         quantitePerdue: 0,

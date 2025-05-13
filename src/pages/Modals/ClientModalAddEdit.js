@@ -25,23 +25,26 @@ const ClientModalAddEdit = ({
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
+    let magasin = stores.filter((el) => el._id === user.magasinId[0]);
+
+    const magasinId = magasin
+      ? Array.isArray(magasin)
+        ? magasin
+        : [magasin]
+      : [];
+
     if (action === "EDIT" && record) {
       // Convert magasinId to array if it's not already
 
-      let magasin = user.magasinId[0];
-
-      const magasinId = magasin
-        ? Array.isArray(magasin)
-          ? magasin
-          : [magasin]
-        : [];
-
       form.setFieldsValue({
         ...record,
-        magasinId,
+        magasinId: magasinId | [],
       });
     } else {
       form.resetFields();
+      form.setFieldsValue({
+        magasinId: magasinId | [],
+      });
     }
   }, [visible, record, action]);
 
@@ -56,7 +59,8 @@ const ClientModalAddEdit = ({
         telephone: values.telephone,
         email: values.email,
         notes: values.notes,
-        magasinId: values.magasinId || [],
+        magasinId:
+          user.type === "user" ? user?.magasinId : values.magasinId || [],
       };
 
       if (action === "EDIT") {
@@ -82,6 +86,8 @@ const ClientModalAddEdit = ({
       setLoading(false);
     }
   };
+
+  console.log("eeeeee", stores);
 
   return (
     <Modal
@@ -131,29 +137,31 @@ const ClientModalAddEdit = ({
           <Input prefix={<MailOutlined />} />
         </Form.Item>
 
-        <Form.Item
-          name="magasinId"
-          label="Magasins associés"
-          tooltip="Sélectionnez un ou plusieurs magasins"
-        >
-          <Select
-            mode="multiple"
-            disabled={user.type === "user"}
-            allowClear
-            showSearch
-            optionFilterProp="children"
-            filterOption={(input, option) =>
-              option.children.toLowerCase().includes(input.toLowerCase())
-            }
-            suffixIcon={<ShopOutlined />}
+        {!user.type === "user" && (
+          <Form.Item
+            name="magasinId"
+            label="Magasins associés"
+            tooltip="Sélectionnez un ou plusieurs magasins"
           >
-            {stores?.map((store) => (
-              <Option key={store._id} value={store._id}>
-                {store.nom}
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
+            <Select
+              mode="multiple"
+              // disabled={user.type === "user"}
+              allowClear
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+              suffixIcon={<ShopOutlined />}
+            >
+              {stores?.map((store) => (
+                <Option key={store._id} value={store._id}>
+                  {store.nom}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
 
         <Form.Item name="notes" label="Notes">
           <TextArea rows={3} />

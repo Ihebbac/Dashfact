@@ -87,11 +87,11 @@ const UserModalAddEdit = ({
       if (type === "EDIT") {
         await axios.put(
           `https://rayhanaboutique.online/api/user/${record._id}`,
-          payload
+          values
         );
-        notification.success({ message: "Utilisateur mis à jour avec succès" });
+        notification.success({ message: "Utilisateur modifié avec succès" });
       } else {
-        await axios.post("https://rayhanaboutique.online/api/user", payload);
+        await axios.post("https://rayhanaboutique.online/api/auth/add", payload);
         notification.success({ message: "Utilisateur créé avec succès" });
       }
 
@@ -257,7 +257,9 @@ const Admins = () => {
       async onOk() {
         try {
           setLoading(true);
-          await axios.delete(`https://rayhanaboutique.online/users/${user._id}`);
+          await axios.delete(
+            `https://rayhanaboutique.online/users/${user._id}`
+          );
           notification.success({
             message: "Utilisateur supprimé avec succès",
           });
