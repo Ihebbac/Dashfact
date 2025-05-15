@@ -77,7 +77,9 @@ const Invoice = () => {
         let sorted_obj = _.sortBy(response.data, function (o) {
           return Number(o._id);
         }).filter((el) =>
-          user.type === "admin" ? true : user.magasinId.includes(el.magasinId._id)
+          user.type === "admin"
+            ? true
+            : user.magasinId.includes(el.magasinId._id)
         );
         setData(sorted_obj);
         setfilterData(sorted_obj);
@@ -100,9 +102,17 @@ const Invoice = () => {
   };
 
   const fetchProducts = () => {
-    axios.get("https://rayhanaboutique.online/stock").then((response) => {
-      setProducts(response.data);
-    });
+    // if (user.type === "admin") {
+      axios.get("https://rayhanaboutique.online/stock").then((response) => {
+        setProducts(response.data);
+      });
+    // } else {
+    //   axios
+    //     .get("https://rayhanaboutique.online/stock/magasin/" + user?.magasinId[0])
+    //     .then((response) => {
+    //       setProducts(response.data);
+    //     });
+    // }
   };
 
   const handrefetech = () => {

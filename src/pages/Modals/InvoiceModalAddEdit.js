@@ -46,8 +46,8 @@ const InvoiceModalAddEdit = ({
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("unpaid");
+  const [magasinIds, setmagasinId] = useState("");
 
-  console.log("dddddddddddddddddddd", record);
   const user = JSON.parse(localStorage.getItem("user"));
   useEffect(() => {
     if (type === "EDIT" && record) {
@@ -65,6 +65,9 @@ const InvoiceModalAddEdit = ({
         payed: record.payed || 0,
         notes: record.notes || "",
       });
+      setmagasinId(
+        record.magasinId && (record?.magasinId?._id || user?.magasinId[0])
+      );
       setItems(record.items || []);
       setStatus(record.status || "unpaid");
       setPayed(record.payed || 0);
@@ -138,7 +141,7 @@ const InvoiceModalAddEdit = ({
     newItems[index][field] = value;
 
     if (field === "stockId" && value) {
-      const product = products.find((p) => p._id === value);
+      const product = products?.find((p) => p._id === value);
       if (product) {
         newItems[index].reference = product.reference;
         newItems[index].nom = product.nom;
@@ -165,6 +168,7 @@ const InvoiceModalAddEdit = ({
 
   const handlestoresChange = (customerId) => {
     const customer = stores.find((c) => c._id === customerId);
+    setmagasinId(customer._id);
     if (customer) {
       form.setFieldsValue({
         magasinId: customer._id,
@@ -243,24 +247,18 @@ const InvoiceModalAddEdit = ({
       };
 
       if (type === "EDIT") {
-        await axios.put(
-          `https://rayhanaboutique.online/invoice/${record._id}`,
-          payload
-        );
+        await axios.put(`https://rayhanaboutique.online/invoice/${record._id}`, payload);
         notification.success({ message: "Facture mise à jour avec succès" });
       } else {
         let customerId = values.customerId;
 
         if (!values.customerId) {
-          const res = await axios.post(
-            "https://rayhanaboutique.online/clients",
-            {
-              adresse: values.customerAddress,
-              telephone: values.customerPhone,
-              nom: values.customerName,
-              magasinId: [values.magasinId],
-            }
-          );
+          const res = await axios.post("https://rayhanaboutique.online/clients", {
+            adresse: values.customerAddress,
+            telephone: values.customerPhone,
+            nom: values.customerName,
+            magasinId: [values.magasinId],
+          });
 
           customerId = res?.data?._id;
         }
@@ -301,32 +299,34 @@ const InvoiceModalAddEdit = ({
             option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
           }
         >
-          {products.map((product) => (
-            <Option key={product._id} value={product._id}>
-              {product.nom} ({product.reference})
-            </Option>
-          ))}
+          {products
+            ?.filter((el) => el.magasinId === magasinIds)
+            .map((product) => (
+              <Option key={product._id} value={product._id}>
+                {product.nom} REF : ({product.reference})
+              </Option>
+            ))}
         </Select>
       ),
     },
-    {
-      title: "Magasin",
-      dataIndex: "magasinId",
-      key: "magasinId",
-      render: (value, record, index) => (
-        <Select
-          value={value}
-          style={{ width: "100%" }}
-          onChange={(val) => handleItemChange(index, "magasinId", val)}
-        >
-          {stores.map((store) => (
-            <Option key={store._id} value={store._id}>
-              {store.nom}
-            </Option>
-          ))}
-        </Select>
-      ),
-    },
+    // {
+    //   title: "Magasin",
+    //   dataIndex: "magasinId",
+    //   key: "magasinId",
+    //   render: (value, record, index) => (
+    //     <Select
+    //       value={value}
+    //       style={{ width: "100%" }}
+    //       onChange={(val) => handleItemChange(index, "magasinId", val)}
+    //     >
+    //       {stores.map((store) => (
+    //         <Option key={store._id} value={store._id}>
+    //           {store.nom}
+    //         </Option>
+    //       ))}
+    //     </Select>
+    //   ),
+    // },
     {
       title: "Quantité",
       dataIndex: "quantity",

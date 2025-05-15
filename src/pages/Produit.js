@@ -15,6 +15,8 @@ import {
   Divider,
   Progress,
   Image,
+  Tabs,
+  Popconfirm,
 } from "antd";
 import {
   DeleteTwoTone,
@@ -23,84 +25,190 @@ import {
   ExclamationCircleOutlined,
   SearchOutlined,
   UploadOutlined,
+  ShopOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import _ from "lodash";
 import ProduitModalAddEdit from "./Modals/ProduitModalAddEdit";
 import Text from "antd/lib/typography/Text";
-import * as XLSX from "xlsx";
 
 const { confirm } = Modal;
+const { TabPane } = Tabs;
 
 const Produit = () => {
   const [data, setData] = useState([]);
-  const [filterData, setfilterData] = useState([]);
+  const [filterData, setFilterData] = useState([]);
   const [magasins, setMagasins] = useState([]);
   const [visible, setVisible] = useState(false);
   const [action, setAction] = useState("");
   const [search, setSearch] = useState("");
-  const [record, setrecord] = useState(null);
-  const [refetech, setrefetech] = useState(false);
-  const [show, setshow] = useState(false);
+  const [record, setRecord] = useState(null);
+  const [refetch, setRefetch] = useState(false);
+  const [show, setShow] = useState(false);
+  const [showMagasinStock, setShowMagasinStock] = useState(false);
   const [fileUploading, setFileUploading] = useState(false);
+  const [stockByMagasin, setStockByMagasin] = useState([]);
+  // New state for selected rows
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const abilities = JSON.parse(localStorage.getItem("user"))?.abilities?.find(
-    (el) => el.page === "produit"
-  )?.can;
-
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const abilities = user?.abilities?.find((el) => el.page === "produit")?.can;
 
   useEffect(() => {
     fetchData();
-  }, [refetech]);
+  }, [refetch]);
 
-  const fetchData = () => {
-    axios.get("https://rayhanaboutique.online/stock").then((response) => {
-      if (response.data) {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const stockResponse = await axios.get("https://rayhanaboutique.online/stock");
+      if (stockResponse.data) {
         setSearch("");
-        setfilterData([]);
+        setFilterData([]);
+        setSelectedRowKeys([]); // Clear selection on data refresh
 
-        const data =
+        const filteredData =
           user.type === "user"
-            ? response.data.filter(
-                (el) => el.quantite[0].magasinId === user.magasinId[0]
-              )
-            : response.data;
+            ? stockResponse.data.filter((el) => el.magasinId === user.magasinId)
+            : stockResponse.data;
 
-        let sorted_obj = _.sortBy(data, function (o) {
-          return Number(o._id);
-        });
-        setData(sorted_obj);
+        const sortedData = _.sortBy(filteredData, (o) => Number(o._id));
+        setData(sortedData);
       } else {
         notification.error({ message: "No Data Found" });
       }
-    });
 
-    axios
-      .get("https://rayhanaboutique.online/magasins")
-      .then((response) => setMagasins(response.data))
-      .catch((err) => console.error("Error loading stores:", err));
+      const magasinsResponse = await axios.get(
+        "https://rayhanaboutique.online/magasins"
+      );
+      setMagasins(magasinsResponse.data);
+    } catch (err) {
+      console.error("Error loading data:", err);
+      notification.error({ message: "Error loading data" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handrefetech = () => {
-    setrefetech(!refetech);
+  const handleRefetch = () => {
+    setRefetch(!refetch);
   };
 
-  const showPromiseConfirm = (alldata, dataDelete) => {
+  const showDeleteConfirmation = (stockItem) => {
     confirm({
-      title: "Vous voulez supprimer " + alldata.name + "?",
+      title: `Voulez-vous supprimer ${stockItem.nom}?`,
       icon: <ExclamationCircleOutlined />,
-      onOk() {
-        axios
-          .delete("https://rayhanaboutique.online/stock/" + dataDelete)
-          .then((response) => {
-            message.success("Produit supprimer avec success.");
-            handrefetech();
-          });
+      onOk: async () => {
+        try {
+          await axios.delete(`https://rayhanaboutique.online/stock/${stockItem._id}`);
+          message.success("Produit supprimé avec succès.");
+          handleRefetch();
+        } catch (error) {
+          message.error("Erreur lors de la suppression du produit.");
+        }
       },
-      onCancel() {},
     });
+  };
+
+  // New function to handle bulk deletion
+  const handleBulkDelete = async () => {
+    if (!selectedRowKeys.length) {
+      message.warning("Aucun produit sélectionné");
+      return;
+    }
+
+    confirm({
+      title: `Voulez-vous supprimer ${selectedRowKeys.length} produit(s) sélectionné(s)?`,
+      icon: <ExclamationCircleOutlined />,
+      content: "Cette action est irréversible",
+      onOk: async () => {
+        try {
+          setLoading(true);
+          // Using Promise.all to handle multiple delete requests in parallel
+          await Promise.all(
+            selectedRowKeys.map((id) =>
+              axios.delete(`https://rayhanaboutique.online/stock/${id}`)
+            )
+          );
+          message.success(`${selectedRowKeys.length} produit(s) supprimé(s) avec succès.`);
+          setSelectedRowKeys([]);
+          handleRefetch();
+        } catch (error) {
+          console.error("Error during bulk delete:", error);
+          message.error("Erreur lors de la suppression des produits.");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
+
+  const loadStockByMagasin = async () => {
+    try {
+      const response = await axios.get("https://rayhanaboutique.online/stock/all");
+
+      // Process the raw data using lodash
+      const processedData = _.chain(response.data)
+        // Group products by magasin ID
+        .groupBy((product) => product.magasinId._id)
+        // Transform each group into the required format
+        .map((produits, magasinIdKey) => {
+          // Get magasin info from the first product in the group
+          const magasinInfo = produits[0]?.magasinId || {
+            _id: magasinIdKey,
+            nom: "Unknown",
+          };
+
+          // Calculate totals using lodash
+          const totalInitial = _.sumBy(produits, "quantiteInitiale") || 0;
+          const totalVendu = _.sumBy(produits, "quantiteVendue") || 0;
+          const totalPerdu = _.sumBy(produits, "quantitePerdue") || 0;
+          const totalStock = totalInitial - totalVendu - totalPerdu;
+
+          // Calculate stock value based on available stock and purchase price
+          const stockValue = _.reduce(
+            produits,
+            (sum, product) => {
+              const availableStock =
+                product.quantiteInitiale -
+                product.quantiteVendue -
+                product.quantitePerdue;
+              return sum + availableStock * product.prixAchat;
+            },
+            0
+          );
+
+          // Prepare the data structure as required
+          return {
+            magasin: { _id: magasinInfo._id, nom: magasinInfo.nom },
+            count: produits.length,
+            totalInitial,
+            totalVendu,
+            totalPerdu,
+            totalStock,
+            stockValue,
+            produits: produits.map((product) => ({
+              _id: product._id,
+              nom: product.nom,
+              reference: product.reference,
+              quantiteInitiale: product.quantiteInitiale,
+              quantiteVendue: product.quantiteVendue,
+              quantitePerdue: product.quantitePerdue,
+              prixAchat: product.prixAchat,
+            })),
+          };
+        })
+        .value();
+
+      setStockByMagasin(processedData);
+      setShowMagasinStock(true);
+    } catch (error) {
+      console.error("Error loading stock by magasin:", error);
+      message.error("Erreur lors du chargement des stocks par magasin");
+    }
   };
 
   const columns = [
@@ -108,14 +216,12 @@ const Produit = () => {
       title: "Image",
       dataIndex: "image",
       key: "image",
-      render: (_, record) => (
-        <div>
-          <Image
-            src={`https://rayhanaboutique.online/upload/${record?.image}`}
-            width={100}
-            height={100}
-          />
-        </div>
+      render: (image) => (
+        <Image
+          src={`https://rayhanaboutique.online/upload/${image}`}
+          width={100}
+          height={100}
+        />
       ),
     },
     {
@@ -129,43 +235,67 @@ const Produit = () => {
       key: "nom",
     },
     {
+      title: "Taille",
+      dataIndex: "taille",
+      key: "taille",
+    },
+    {
+      title: "Prix Achat",
+      dataIndex: "prixAchat",
+      key: "prixAchat",
+    },
+    {
+      title: "Prix Vente",
+      dataIndex: "prixVente",
+      key: "prixVente",
+    },
+    {
+      title: "Quantité Initiale",
+      dataIndex: "quantiteInitiale",
+      key: "quantiteInitiale",
+    },
+    {
+      title: "Quantité Vendue",
+      dataIndex: "quantiteVendue",
+      key: "quantiteVendue",
+    },
+    {
+      title: "Quantité Perdue",
+      dataIndex: "quantitePerdue",
+      key: "quantitePerdue",
+    },
+    {
       title: "Actions",
       key: "action",
       render: (_, record) => (
-        <div className="action-buttons">
-          <Row>
-            <Col span={8} className="ms-2">
-              <Button
-                onClick={() => {
-                  setVisible(true);
-                  setrecord(record);
-                  setAction("EDIT");
-                }}
-              >
-                <EditTwoTone />
-              </Button>
-            </Col>
-            <Col span={8} className="ms-2">
-              <Button
-                onClick={() => {
-                  setshow(true);
-                  setrecord(record);
-                }}
-              >
-                <InfoCircleOutlined />
-              </Button>
-            </Col>
-            <Col span={8}>
-              <Button
-                type="primary"
-                danger
-                onClick={() => showPromiseConfirm(record, record._id)}
-              >
-                <DeleteTwoTone twoToneColor="#FFFFFF" />
-              </Button>
-            </Col>
-          </Row>
-        </div>
+        <Row gutter={8}>
+          <Col>
+            <Button
+              onClick={() => {
+                setVisible(true);
+                setRecord(record);
+                setAction("EDIT");
+              }}
+            >
+              <EditTwoTone />
+            </Button>
+          </Col>
+          <Col>
+            <Button
+              onClick={() => {
+                setShow(true);
+                setRecord(record);
+              }}
+            >
+              <InfoCircleOutlined />
+            </Button>
+          </Col>
+          <Col>
+            <Button danger onClick={() => showDeleteConfirmation(record)}>
+              Supprimer
+            </Button>
+          </Col>
+        </Row>
       ),
     },
   ];
@@ -181,43 +311,77 @@ const Produit = () => {
         item.nom.toLowerCase().includes(search.toLowerCase()) ||
         item.reference.toLowerCase().includes(search.toLowerCase())
     );
-    setfilterData(filtered);
+    setFilterData(filtered);
   };
-  const [dataSheet, setDataSheet] = useState([]);
 
   const handleExcelImport = async ({ file }) => {
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      // Optional: Set loading state here
-      // setFileUploading(true);
-
-      const response = await axios.post(
-        "https://rayhanaboutique.online/stock/extract",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      const extractedData = response.data;
-      console.log("✅ Extracted data with images:", extractedData);
-
-      // Store in state or pass to another handler
-      setDataSheet(extractedData);
-
-      // Optional: show success toast
-      // message.success(`${file.name} importé avec succès`);
+      setFileUploading(true);
+      await axios.post("https://rayhanaboutique.online/stock/extract", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      message.success(`${file.name} importé avec succès`);
+      handleRefetch();
     } catch (error) {
-      console.error("❌ Error importing Excel:", error);
-      // message.error(`Échec de l'importation: ${error.message}`);
+      console.error("Error importing Excel:", error);
+      message.error(`Échec de l'importation: ${error.message}`);
     } finally {
-      // Optional: setFileUploading(false);
+      setFileUploading(false);
     }
   };
+
+  const magasinStockColumns = [
+    {
+      title: "Magasin",
+      dataIndex: "magasin",
+      key: "magasin",
+      render: (magasin) => magasin.nom,
+    },
+    {
+      title: "Nombre de Produits",
+      dataIndex: "count",
+      key: "count",
+    },
+    {
+      title: "Stock Total",
+      dataIndex: "totalStock",
+      key: "totalStock",
+      render: (totalStock, record) => (
+        <div>
+          <Text>Initial: {record.totalInitial}</Text>
+          <Divider type="vertical" />
+          <Text>Vendu: {record.totalVendu}</Text>
+          <Divider type="vertical" />
+          <Text>Perdu: {record.totalPerdu}</Text>
+          <Divider type="vertical" />
+          <Text strong>Disponible: {totalStock}</Text>
+        </div>
+      ),
+    },
+    {
+      title: "Valeur du Stock",
+      dataIndex: "stockValue",
+      key: "stockValue",
+      render: (value) => `${value.toFixed(2)} TND`,
+    },
+  ];
+
+  // Row selection configuration
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (keys) => setSelectedRowKeys(keys),
+    selections: [
+      Table.SELECTION_ALL,
+      Table.SELECTION_INVERT,
+      Table.SELECTION_NONE,
+    ],
+  };
+
   return (
     <>
       <h1>Produits</h1>
@@ -244,12 +408,35 @@ const Produit = () => {
                     type="primary"
                     onClick={() => {
                       setVisible(true);
-                      setrecord({});
+                      setRecord({});
                       setAction("ADD");
                     }}
                   >
                     Ajouter un produit
                   </Button>
+
+                  {/* Bulk Delete Button */}
+                  {selectedRowKeys.length > 0 && (
+                    <Button
+                      style={{ marginRight: 25 }}
+                      type="danger"
+                      icon={<DeleteOutlined />}
+                      onClick={handleBulkDelete}
+                      loading={loading}
+                    >
+                      Supprimer ({selectedRowKeys.length})
+                    </Button>
+                  )}
+
+                  {user.type === "admin" && (
+                    <Button
+                      style={{ marginRight: 25 }}
+                      icon={<ShopOutlined />}
+                      onClick={loadStockByMagasin}
+                    >
+                      Stock par Magasin
+                    </Button>
+                  )}
 
                   <Upload
                     accept=".xlsx,.xls,.csv"
@@ -268,12 +455,29 @@ const Produit = () => {
                 </div>
               }
             >
+              {/* Display selection summary */}
+              {selectedRowKeys.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <Text>{`${selectedRowKeys.length} produit(s) sélectionné(s)`}</Text>
+                  <Button 
+                    type="link" 
+                    onClick={() => setSelectedRowKeys([])}
+                    style={{ marginLeft: 8 }}
+                  >
+                    Effacer la sélection
+                  </Button>
+                </div>
+              )}
+              
               <div className="table-responsive">
                 <Table
+                  rowSelection={rowSelection}
                   columns={columns}
                   dataSource={filterData.length > 0 ? filterData : data}
                   pagination={true}
                   className="ant-border-space"
+                  rowKey="_id"
+                  loading={loading}
                 />
               </div>
             </Card>
@@ -283,7 +487,7 @@ const Produit = () => {
         <ProduitModalAddEdit
           visible={visible}
           record={action === "EDIT" ? record : {}}
-          refetch={handrefetech}
+          refetch={handleRefetch}
           type={action}
           onCancel={() => setVisible(false)}
         />
@@ -292,7 +496,7 @@ const Produit = () => {
           visible={show}
           destroyOnClose
           width={1000}
-          onCancel={() => setshow(false)}
+          onCancel={() => setShow(false)}
           footer={false}
         >
           {record && (
@@ -307,94 +511,140 @@ const Produit = () => {
                     <p>
                       <strong>Nom:</strong> {record.nom}
                     </p>
-                    {record?.description && (
-                      <p>
-                        <strong>Description:</strong> {record.description}
-                      </p>
-                    )}
+                    <p>
+                      <strong>Taille:</strong> {record.taille}
+                    </p>
+                    <p>
+                      <strong>Prix Achat:</strong> {record.prixAchat}
+                    </p>
+                    <p>
+                      <strong>Prix Vente:</strong> {record.prixVente}
+                    </p>
+                  </Col>
+                  <Col span={12}>
+                    <Image
+                      src={`https://rayhanaboutique.online/upload/${record.image}`}
+                      width={200}
+                      height={200}
+                    />
                   </Col>
                 </Row>
 
-                <Card
-                  title="Stock par Magasin"
-                  style={{ marginTop: 16 }}
-                  bordered={false}
-                >
-                  {record?.quantite?.map((el, index) => {
-                    const magasin = magasins.find(
-                      (elm) => elm._id === el.magasinId
-                    );
-                    const availableStock =
-                      el.quantiteInitiale - el.quantiteVendue;
-                    const stockPercentage =
-                      (availableStock / el.quantiteInitiale) * 100;
-
-                    return (
-                      <div key={index} style={{ marginBottom: 16 }}>
-                        <Row gutter={16} align="middle">
-                          <Col span={8}>
-                            <Text strong>Magasin:</Text>
-                            <Text style={{ marginLeft: 8 }}>
-                              {magasin?.nom || "Inconnu"}
-                            </Text>
-                          </Col>
-
-                          <Col span={8}>
-                            <Text strong>
-                              Stock disponible: {availableStock}
-                            </Text>
-                            <Badge
-                              count={availableStock}
-                              style={{
-                                backgroundColor:
-                                  availableStock > 0 ? "#52c41a" : "#f5222d",
-                                marginLeft: 8,
-                              }}
-                            />
-                          </Col>
-
-                          <Col span={8}>
-                            <Progress
-                              percent={stockPercentage}
-                              status={
-                                stockPercentage > 50
-                                  ? "success"
-                                  : stockPercentage > 20
-                                  ? "normal"
-                                  : "exception"
-                              }
-                              showInfo={false}
-                            />
-                          </Col>
-                        </Row>
-
-                        <Row gutter={16} style={{ marginTop: 8 }}>
-                          <Col span={12}>
-                            <Text type="secondary">
-                              Initial: {el.quantiteInitiale} | Vendu:{" "}
-                              {el.quantiteVendue}
-                            </Text>
-                          </Col>
-                          <Col span={12}>
-                            {availableStock <= 0 && (
-                              <Tag color="red">RUPTURE DE STOCK</Tag>
-                            )}
-                            {availableStock > 0 && availableStock <= 5 && (
-                              <Tag color="orange">STOCK FAIBLE</Tag>
-                            )}
-                          </Col>
-                        </Row>
-
-                        {index < record.quantite.length - 1 && (
-                          <Divider style={{ margin: "12px 0" }} />
-                        )}
-                      </div>
-                    );
-                  })}
+                <Card title="Stock" style={{ marginTop: 16 }} bordered={false}>
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <Text strong>Quantité Initiale:</Text>
+                      <Text> {record.quantiteInitiale}</Text>
+                    </Col>
+                    <Col span={8}>
+                      <Text strong>Quantité Vendue:</Text>
+                      <Text> {record.quantiteVendue}</Text>
+                    </Col>
+                    <Col span={8}>
+                      <Text strong>Quantité Perdue:</Text>
+                      <Text> {record.quantitePerdue}</Text>
+                    </Col>
+                  </Row>
+                  <Divider />
+                  <Row>
+                    <Col span={24}>
+                      <Text strong>Stock Disponible: </Text>
+                      <Text>
+                        {record.quantiteInitiale -
+                          record.quantiteVendue -
+                          record.quantitePerdue}
+                      </Text>
+                    </Col>
+                  </Row>
                 </Card>
               </Card>
             </Badge.Ribbon>
           )}
+        </Modal>
+
+        {/* Modal for Stock by Magasin */}
+        <Modal
+          title="Stock par Magasin"
+          visible={showMagasinStock}
+          width={1000}
+          onCancel={() => setShowMagasinStock(false)}
+          footer={null}
+        >
+          <Tabs defaultActiveKey="1">
+            <TabPane tab="Résumé" key="1">
+              <Table
+                columns={magasinStockColumns}
+                dataSource={stockByMagasin}
+                rowKey={(record) => record.magasin._id}
+                pagination={false}
+              />
+            </TabPane>
+            <TabPane tab="Détails" key="2">
+              {stockByMagasin.map((magasinData) => (
+                <Card
+                  key={magasinData.magasin._id}
+                  title={`Magasin: ${magasinData.magasin.nom}`}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Table
+                    columns={[
+                      { title: "Produit", dataIndex: "nom", key: "nom" },
+                      {
+                        title: "Référence",
+                        dataIndex: "reference",
+                        key: "reference",
+                      },
+                      {
+                        title: "Stock Initial",
+                        dataIndex: "quantiteInitiale",
+                        key: "quantiteInitiale",
+                      },
+                      {
+                        title: "Vendu",
+                        dataIndex: "quantiteVendue",
+                        key: "quantiteVendue",
+                      },
+                      {
+                        title: "Perdu",
+                        dataIndex: "quantitePerdue",
+                        key: "quantitePerdue",
+                      },
+                      {
+                        title: "Disponible",
+                        key: "disponible",
+                        render: (_, record) => (
+                          <Text strong>
+                            {record.quantiteInitiale -
+                              record.quantiteVendue -
+                              record.quantitePerdue}
+                          </Text>
+                        ),
+                      },
+                      {
+                        title: "Valeur",
+                        key: "valeur",
+                        render: (_, record) => (
+                          <Text>
+                            {(
+                              record.prixAchat *
+                              (record.quantiteInitiale -
+                                record.quantiteVendue -
+                                record.quantitePerdue)
+                            ).toFixed(2)}{" "}
+                            TND
+                          </Text>
+                        ),
+                      },
+                    ]}
+                    dataSource={magasinData.produits}
+                    rowKey="_id"
+                    pagination={false}
+                    size="small"
+                  />
+                </Card>
+              ))}
+            </TabPane>
+          </Tabs>
         </Modal>
       </div>
     </>

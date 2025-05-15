@@ -9,16 +9,11 @@ import {
   Modal,
   Row,
   Select,
-  Table,
   Typography,
   Upload,
   Image,
 } from "antd";
-import {
-  MinusCircleOutlined,
-  PlusOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
+import { UploadOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -29,19 +24,15 @@ const ProduitModalAddEdit = (props) => {
   const [form] = Form.useForm();
   const [magasins, setMagasins] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [quantities, setQuantities] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user")) || {};
 
-  // Initialize form and quantities when modal becomes visible or record changes
   useEffect(() => {
     const fetchMagasins = async () => {
       try {
-        const response = await axios.get(
-          "https://rayhanaboutique.online/magasins"
-        );
+        const response = await axios.get("https://rayhanaboutique.online/magasins");
         setMagasins(response.data);
       } catch (err) {
         console.error("Error loading stores:", err);
@@ -53,81 +44,58 @@ const ProduitModalAddEdit = (props) => {
       fetchMagasins();
 
       if (type === "EDIT" && record) {
-        // Initialize form with record data
         form.setFieldsValue({
           nom: record.nom,
           reference: record.reference,
           taille: record.taille,
           prixAchat: record.prixAchat,
           prixVente: record.prixVente,
+          quantiteInitiale: record.quantiteInitiale,
+          quantiteVendue: record.quantiteVendue,
+          quantitePerdue: record.quantitePerdue,
+          magasinId: record.magasinId,
         });
 
-        // Initialize quantities from record
-        setQuantities(record.quantite || []);
-
-        // Initialize image preview if exists
         if (record.image) {
-          setImagePreview(
-            `https://rayhanaboutique.online/upload/${record.image}`
-          );
-          setImageFile(record?.image);
+          setImagePreview(`https://rayhanaboutique.online/upload/${record.image}`);
+          setImageFile(record.image);
         }
       } else {
         form.resetFields();
-        setQuantities([]);
         setImageFile(null);
         setImagePreview("");
+        
+        // Set default magasinId for users
+        if (user.type === "user" && user.magasinId) {
+          form.setFieldsValue({
+            magasinId: user.magasinId[0]
+          });
+        }
       }
     }
   }, [visible, record]);
-
-  const handleAddMagasin = () => {
-    setQuantities([
-      ...quantities,
-      {
-        magasinId: user.type === "user" ? user?.magasinId[0] : null,
-        quantiteInitiale: 0,
-        quantiteVendue: 0,
-        quantitePerdue: 0,
-      },
-    ]);
-  };
-
-  const handleRemoveMagasin = (index) => {
-    const newQuantities = quantities.filter((_, i) => i !== index);
-    setQuantities(newQuantities);
-  };
-
-  const handleQuantityChange = (index, field, value) => {
-    const newQuantities = [...quantities];
-    newQuantities[index] = {
-      ...newQuantities[index],
-      [field]: value,
-    };
-    setQuantities(newQuantities);
-  };
 
   const beforeUpload = (file) => {
     const isImage = file.type.startsWith("image/");
     if (!isImage) {
       message.error("Vous ne pouvez uploader que des fichiers images!");
+      return false;
     }
 
     const isLt2M = file.size / 1024 / 1024 < 2;
     if (!isLt2M) {
       message.error("L'image doit être inférieure à 2MB!");
+      return false;
     }
 
-    return isImage && isLt2M;
+    return true;
   };
 
   const handleImageChange = (info) => {
     if (info.file.status === "done") {
-      // Get this url from response in real world
       const imageUrl = URL.createObjectURL(info.file.originFileObj);
       setImagePreview(imageUrl);
-      setImageFile(info.file.originFileObj.name);
-      form.setFieldsValue("image", info.file.originFileObj.name);
+      setImageFile(info.file.originFileObj);
     }
   };
 
@@ -161,28 +129,19 @@ const ProduitModalAddEdit = (props) => {
     try {
       let imageFilename = record?.image || null;
 
-      // // Upload new image if one was selected
-      // if (imageFile) {
-      //   imageFilename = await uploadImage();
-      //   if (!imageFilename) return;
-      // }
+      // Upload new image if one was selected
+      if (imageFile && typeof imageFile !== 'string') {
+        imageFilename = await uploadImage();
+        if (!imageFilename) return;
+      }
 
       const payload = {
         ...values,
-        image: imageFile,
-        quantite: quantities.map((q) => ({
-          ...q,
-          quantiteInitiale: Number(q.quantiteInitiale),
-          quantiteVendue: Number(q.quantiteVendue),
-          quantitePerdue: Number(q.quantitePerdue),
-        })),
+        image: imageFilename || imageFile,
       };
 
       if (type === "EDIT") {
-        await axios.put(
-          `https://rayhanaboutique.online/stock/${record._id}`,
-          payload
-        );
+        await axios.put(`https://rayhanaboutique.online/stock/${record._id}`, payload);
         message.success("Produit mis à jour avec succès");
       } else {
         await axios.post("https://rayhanaboutique.online/stock", payload);
@@ -201,77 +160,6 @@ const ProduitModalAddEdit = (props) => {
     }
   };
 
-  const quantityColumns = [
-    {
-      title: "Magasin",
-      dataIndex: "magasinId",
-      render: (_, __, index) => (
-        <Select
-          disabled={user.type === "user"}
-          value={quantities[index]?.magasinId}
-          onChange={(value) => handleQuantityChange(index, "magasinId", value)}
-          placeholder="Sélectionner un magasin"
-          style={{ width: "100%" }}
-          allowClear
-        >
-          {magasins.map((magasin) => (
-            <Select.Option key={magasin._id} value={magasin._id}>
-              {magasin.nom}
-            </Select.Option>
-          ))}
-        </Select>
-      ),
-    },
-    {
-      title: "Quantité Initiale",
-      dataIndex: "quantiteInitiale",
-      render: (_, __, index) => (
-        <InputNumber
-          value={quantities[index]?.quantiteInitiale}
-          onChange={(value) =>
-            handleQuantityChange(index, "quantiteInitiale", value)
-          }
-          min={0}
-          style={{ width: "100%" }}
-        />
-      ),
-    },
-    {
-      title: "Quantité Vendue",
-      dataIndex: "quantiteVendue",
-      render: (_, __, index) => (
-        <InputNumber
-          value={quantities[index]?.quantiteVendue}
-          onChange={(value) =>
-            handleQuantityChange(index, "quantiteVendue", value)
-          }
-          min={0}
-          style={{ width: "100%" }}
-        />
-      ),
-    },
-    {
-      title: "Quantité Perdue",
-      dataIndex: "quantitePerdue",
-      render: (_, __, index) => (
-        <InputNumber
-          value={quantities[index]?.quantitePerdue}
-          onChange={(value) =>
-            handleQuantityChange(index, "quantitePerdue", value)
-          }
-          min={0}
-          style={{ width: "100%" }}
-        />
-      ),
-    },
-    {
-      title: "Action",
-      render: (_, __, index) => (
-        <MinusCircleOutlined onClick={() => handleRemoveMagasin(index)} />
-      ),
-    },
-  ];
-
   const uploadProps = {
     name: "file",
     multiple: false,
@@ -284,11 +172,9 @@ const ProduitModalAddEdit = (props) => {
 
   return (
     <Modal
-      title={
-        type === "EDIT" ? "Modifier le Produit" : "Ajouter un Nouveau Produit"
-      }
+      title={type === "EDIT" ? "Modifier le Produit" : "Ajouter un Nouveau Produit"}
       visible={visible}
-      width={1000}
+      width={800}
       onCancel={onCancel}
       onOk={() => form.submit()}
       confirmLoading={loading}
@@ -303,9 +189,7 @@ const ProduitModalAddEdit = (props) => {
               <Form.Item
                 name="nom"
                 label="Nom du Produit"
-                rules={[
-                  { required: true, message: "Ce champ est obligatoire" },
-                ]}
+                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
               >
                 <Input placeholder="Entrez le nom du produit" />
               </Form.Item>
@@ -315,9 +199,7 @@ const ProduitModalAddEdit = (props) => {
               <Form.Item
                 name="reference"
                 label="Référence"
-                rules={[
-                  { required: true, message: "Ce champ est obligatoire" },
-                ]}
+                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
               >
                 <Input placeholder="Entrez la référence" />
               </Form.Item>
@@ -375,9 +257,7 @@ const ProduitModalAddEdit = (props) => {
               <Form.Item
                 name="prixAchat"
                 label="Prix d'Achat (TND)"
-                rules={[
-                  { required: true, message: "Ce champ est obligatoire" },
-                ]}
+                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
               >
                 <InputNumber
                   style={{ width: "100%" }}
@@ -393,9 +273,7 @@ const ProduitModalAddEdit = (props) => {
               <Form.Item
                 name="prixVente"
                 label="Prix de Vente (TND)"
-                rules={[
-                  { required: true, message: "Ce champ est obligatoire" },
-                ]}
+                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
               >
                 <InputNumber
                   style={{ width: "100%" }}
@@ -407,28 +285,54 @@ const ProduitModalAddEdit = (props) => {
               </Form.Item>
             </Col>
 
-            <Col span={24}>
-              <Text strong style={{ display: "block", marginBottom: 16 }}>
-                Quantités par Magasin
-              </Text>
+            <Col span={12}>
+              <Form.Item
+                name="magasinId"
+                label="Magasin"
+                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
+              >
+                <Select
+                  disabled={user.type === "user"}
+                  placeholder="Sélectionner un magasin"
+                  style={{ width: "100%" }}
+                >
+                  {magasins.map((magasin) => (
+                    <Select.Option key={magasin._id} value={magasin._id}>
+                      {magasin.nom}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
-              <Table
-                columns={quantityColumns}
-                dataSource={quantities}
-                pagination={false}
-                rowKey={(_, index) => index}
-                bordered
-                footer={() => (
-                  <Button
-                    type="dashed"
-                    onClick={handleAddMagasin}
-                    block
-                    icon={<PlusOutlined />}
-                  >
-                    Ajouter un Magasin
-                  </Button>
-                )}
-              />
+            <Col span={12}>
+              <Form.Item
+                name="quantiteInitiale"
+                label="Quantité Initiale"
+                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
+              >
+                <InputNumber style={{ width: "100%" }} min={0} />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                name="quantiteVendue"
+                label="Quantité Vendue"
+                initialValue={0}
+              >
+                <InputNumber style={{ width: "100%" }} min={0} />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                name="quantitePerdue"
+                label="Quantité Perdue"
+                initialValue={0}
+              >
+                <InputNumber style={{ width: "100%" }} min={0} />
+              </Form.Item>
             </Col>
           </Row>
         </Card>

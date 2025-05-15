@@ -258,7 +258,7 @@ const Admins = () => {
         try {
           setLoading(true);
           await axios.delete(
-            `https://rayhanaboutique.online/users/${user._id}`
+            `https://rayhanaboutique.online/api/user/${user._id}`
           );
           notification.success({
             message: "Utilisateur supprimé avec succès",
