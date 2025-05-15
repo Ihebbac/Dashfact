@@ -36,6 +36,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import ClientInvoicesModal from "./Modals/ClientInvoicesModal";
 import MagasinIdInvoicesModal from "./Modals/MagasinIdInvoicesModal";
+import logo from "../assets/images/LOGO.png";
 
 const { confirm } = Modal;
 const { Option } = Select;
@@ -103,9 +104,9 @@ const Invoice = () => {
 
   const fetchProducts = () => {
     // if (user.type === "admin") {
-      axios.get("https://rayhanaboutique.online/stock").then((response) => {
-        setProducts(response.data);
-      });
+    axios.get("https://rayhanaboutique.online/stock").then((response) => {
+      setProducts(response.data);
+    });
     // } else {
     //   axios
     //     .get("https://rayhanaboutique.online/stock/magasin/" + user?.magasinId[0])
@@ -183,10 +184,11 @@ const Invoice = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
 
     const theme = {
-      primary: [41, 128, 185],
-      secondary: [52, 152, 219],
-      light: [245, 245, 245],
-      gray: [80, 80, 80],
+      secondary: [7, 40, 73], // #072849 (dark blue)
+      primary: [243, 235, 229], // #F3EBE5 (light beige)
+
+      light: [249, 249, 249], // slightly lighter version of the beige
+      gray: [80, 80, 80], // kept original gray
     };
 
     const {
@@ -205,19 +207,20 @@ const Invoice = () => {
 
     const drawHeader = () => {
       const headerHeight = 40;
-      doc.addImage()
+
       doc.setFillColor(...theme.primary);
       doc.rect(0, 0, pageWidth, headerHeight, "F");
+      doc.addImage(logo, "png", 15, 10, 25, 25);
 
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.text("Societe OR - FIN", 15, 18);
+      doc.text("Societe OR - FIN", 45, 18);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
-      doc.text("18 Rue El Mofti, Tunis", 15, 25);
-      doc.text("Tél: 71 200 090 • MF: 803541/R", 15, 31);
+      doc.text("18 Rue El Mofti, Tunis", 45, 25);
+      doc.text("Tél: 71 200 090 • MF: 803541/R", 45, 31);
 
       doc.setFontSize(13);
       doc.text(`FACTURE #${invoiceNumber}`, pageWidth - 15, 18, {
@@ -310,7 +313,7 @@ const Invoice = () => {
       doc.setFillColor(...theme.primary);
       doc.rect(0, footerY, pageWidth, 30, "F");
 
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(9);
       doc.text(
         "Merci pour votre confiance. Paiement attendu sous 30 jours.",
@@ -326,9 +329,6 @@ const Invoice = () => {
       );
 
       doc.setFontSize(8);
-      doc.text(`Page ${data.pageCount}`, pageWidth - 15, footerY + 26, {
-        align: "right",
-      });
     };
 
     const drawTotals = () => {
@@ -360,7 +360,7 @@ const Invoice = () => {
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
-      doc.setTextColor(...theme.primary);
+      doc.setTextColor(0, 0, 0);
       doc.text("TOTAL:", totalsX + 5, finalY + 45);
       doc.text(
         `${(total + 1).toFixed(2)} TND`,
@@ -404,10 +404,11 @@ const Invoice = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
 
     const theme = {
-      primary: [41, 128, 185],
-      secondary: [52, 152, 219],
-      light: [245, 245, 245],
-      gray: [80, 80, 80],
+      secondary: [7, 40, 73], // #072849 (dark blue)
+      primary: [243, 235, 229], // #F3EBE5 (light beige)
+
+      light: [249, 249, 249], // slightly lighter version of the beige
+      gray: [80, 80, 80], // kept original gray
     };
 
     const {
@@ -428,16 +429,17 @@ const Invoice = () => {
       const headerHeight = 40;
       doc.setFillColor(...theme.primary);
       doc.rect(0, 0, pageWidth, headerHeight, "F");
+      doc.addImage(logo, "png", 15, 10, 25, 25);
 
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(0, 0, 0);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.text("Societe OR - FIN", 15, 18);
+      doc.text("Societe OR - FIN", 45, 18);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);
-      doc.text("18 Rue El Mofti, Tunis", 15, 25);
-      doc.text("Tél: 71 200 090", 15, 31);
+      doc.text("18 Rue El Mofti, Tunis", 45, 25);
+      doc.text("Tél: 71 200 090", 45, 31);
 
       doc.setFontSize(13);
       doc.text(`BDC #${invoiceNumber}`, pageWidth - 15, 18, {
@@ -530,7 +532,7 @@ const Invoice = () => {
       doc.setFillColor(...theme.primary);
       doc.rect(0, footerY, pageWidth, 30, "F");
 
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(9);
       doc.text(
         "Merci pour votre confiance. Paiement attendu sous 30 jours.",
@@ -541,9 +543,6 @@ const Invoice = () => {
       // doc.text("IBAN: FR76 3000 1000 0100 0000 0000 XXXX • BIC: SOGEFRPP", pageWidth / 2, footerY + 16, { align: 'center' });
 
       doc.setFontSize(8);
-      doc.text(`Page ${data.pageCount}`, pageWidth - 15, footerY + 26, {
-        align: "right",
-      });
     };
 
     const drawTotals = () => {
