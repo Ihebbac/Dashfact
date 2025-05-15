@@ -175,6 +175,7 @@ const Invoice = () => {
     setStatusFilter(null);
     setfilterData([]);
   };
+
   // Import separately
   const generatePDF = (invoice) => {
     const doc = new jsPDF();
@@ -204,6 +205,7 @@ const Invoice = () => {
 
     const drawHeader = () => {
       const headerHeight = 40;
+      doc.addImage()
       doc.setFillColor(...theme.primary);
       doc.rect(0, 0, pageWidth, headerHeight, "F");
 
