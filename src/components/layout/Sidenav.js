@@ -12,10 +12,18 @@
 
 import { Menu } from "antd";
 import { NavLink, useLocation } from "react-router-dom";
-import logo from "../../assets/images/abstract-logs.png";
+import logo from "../../assets/images/LOGO.png";
 import { useEffect } from "react";
 import axios from "axios";
-import { BankFilled, ContactsFilled, CreditCardFilled, DatabaseFilled, DropboxOutlined, LockTwoTone, ShopTwoTone } from "@ant-design/icons";
+import {
+  BankFilled,
+  ContactsFilled,
+  CreditCardFilled,
+  DatabaseFilled,
+  DropboxOutlined,
+  LockTwoTone,
+  ShopTwoTone,
+} from "@ant-design/icons";
 
 function Sidenav({ color }) {
   const { pathname } = useLocation();
@@ -72,8 +80,12 @@ function Sidenav({ color }) {
   ];
 
   const billing = [
-    <img src="/icons/step-forward.svg" alt="Step Forward Icon" width={20} height={20} />
-
+    <img
+      src="/icons/step-forward.svg"
+      alt="Step Forward Icon"
+      width={20}
+      height={20}
+    />,
   ];
 
   const rtl = [
@@ -153,8 +165,8 @@ function Sidenav({ color }) {
   return (
     <>
       <div className="brand">
-        <img src={logo} alt="" />
-        <span>Stock360</span>
+        <img src={logo} alt=""/>
+        <span>Societe OR - FIN </span>
       </div>
       <hr />
       <Menu theme="light" mode="inline">
@@ -184,45 +196,43 @@ function Sidenav({ color }) {
                 background: page === "produit" ? color : "",
               }}
             >
-             <DropboxOutlined />
+              <DropboxOutlined />
             </span>
             <span className="label">Produit</span>
           </NavLink>
         </Menu.Item>
 
         {/* Invoice - Admin only */}
-       
-          <Menu.Item key="11">
-            <NavLink to="/Invoice">
-              <span
-                className="icon"
-                style={{
-                  background: page === "Invoice" ? color : "",
-                }}
-              >
-                {tables}
-              </span>
-              <span className="label">Facture Client</span>
-            </NavLink>
-          </Menu.Item>
-     
+
+        <Menu.Item key="11">
+          <NavLink to="/Invoice">
+            <span
+              className="icon"
+              style={{
+                background: page === "Invoice" ? color : "",
+              }}
+            >
+              {tables}
+            </span>
+            <span className="label">Facture Client</span>
+          </NavLink>
+        </Menu.Item>
 
         {/* Clients - Admin only */}
-    
-          <Menu.Item key="20">
-            <NavLink to="/customers">
-              <span
-                className="icon"
-                style={{
-                  background: page === "clients" ? color : "",
-                }}
-              >
+
+        <Menu.Item key="20">
+          <NavLink to="/customers">
+            <span
+              className="icon"
+              style={{
+                background: page === "clients" ? color : "",
+              }}
+            >
               <ContactsFilled />
-              </span>
-              <span className="label">Client</span>
-            </NavLink>
-          </Menu.Item>
-        
+            </span>
+            <span className="label">Client</span>
+          </NavLink>
+        </Menu.Item>
 
         {/* Check - Admin only */}
         {isAdmin && (
@@ -234,7 +244,7 @@ function Sidenav({ color }) {
                   background: page === "orders" ? color : "",
                 }}
               >
-              <CreditCardFilled />
+                <CreditCardFilled />
               </span>
               <span className="label">Check</span>
             </NavLink>
@@ -251,7 +261,7 @@ function Sidenav({ color }) {
                   background: page === "magasin" ? color : "",
                 }}
               >
-               <ShopTwoTone />
+                <ShopTwoTone />
               </span>
               <span className="label">Magasin</span>
             </NavLink>
