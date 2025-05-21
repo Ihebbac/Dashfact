@@ -52,40 +52,44 @@ const Customers = () => {
     fetchMaga();
   }, [refetch]);
 
-
   const fetchClients = () => {
     const user = JSON.parse(localStorage.getItem("user")) || {};
-    
+
+    console.log("eeeeeeeeeeeeeeeeeeee", user.magasinId);
+
     // Get user's stores - ensure it's always an array
-    const userStoreIds = user.magasinId 
-      ? Array.isArray(user.magasinId) 
-        ? user.magasinId 
+    const userStoreIds = user.magasinId
+      ? Array.isArray(user.magasinId)
+        ? user.magasinId
         : [user.magasinId]
       : [];
-  
-    axios.get("https://rayhanaboutique.online/clients")
+
+    axios
+      .get("https://rayhanaboutique.online/clients")
       .then((response) => {
         if (response.data) {
-          const filteredClients = response.data.filter(client => {
+          const filteredClients = response.data.filter((client) => {
             // Admin sees all clients
-            if (user.type === 'admin') return true;
-            
+            if (user.type === "admin") return true;
+
             // Get client's stores - ensure array format
             const clientStoreIds = client.magasinId
               ? Array.isArray(client.magasinId)
                 ? client.magasinId
                 : [client.magasinId]
               : [];
-            
+
             // Check if ANY of client's stores match ANY of user's stores
-            return clientStoreIds.some(storeId => 
+            return clientStoreIds.some((storeId) =>
               userStoreIds.includes(storeId)
             );
           });
-  
+
           // Sort filtered clients by name
-          const sortedData = _.sortBy(filteredClients, (o) => o.nom.toLowerCase());
-          
+          const sortedData = _.sortBy(filteredClients, (o) =>
+            o.nom.toLowerCase()
+          );
+
           setData(sortedData);
           setFilteredData(sortedData);
           setSearch("");

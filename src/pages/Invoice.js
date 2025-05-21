@@ -80,7 +80,7 @@ const Invoice = () => {
         }).filter((el) =>
           user.type === "admin"
             ? true
-            : user.magasinId.includes(el.magasinId._id)
+            : user?.magasinId?.includes(el.magasinId._id)
         );
         setData(sorted_obj);
         setfilterData(sorted_obj);

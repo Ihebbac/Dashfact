@@ -247,18 +247,24 @@ const InvoiceModalAddEdit = ({
       };
 
       if (type === "EDIT") {
-        await axios.put(`https://rayhanaboutique.online/invoice/${record._id}`, payload);
+        await axios.put(
+          `https://rayhanaboutique.online/invoice/${record._id}`,
+          payload
+        );
         notification.success({ message: "Facture mise à jour avec succès" });
       } else {
         let customerId = values.customerId;
 
         if (!values.customerId) {
-          const res = await axios.post("https://rayhanaboutique.online/clients", {
-            adresse: values.customerAddress,
-            telephone: values.customerPhone,
-            nom: values.customerName,
-            magasinId: [values.magasinId],
-          });
+          const res = await axios.post(
+            "https://rayhanaboutique.online/clients",
+            {
+              adresse: values.customerAddress,
+              telephone: values.customerPhone,
+              nom: values.customerName,
+              magasinId: [values.magasinId],
+            }
+          );
 
           customerId = res?.data?._id;
         }
@@ -299,34 +305,23 @@ const InvoiceModalAddEdit = ({
             option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
           }
         >
-          {products
-            ?.filter((el) => el.magasinId === magasinIds)
-            .map((product) => (
-              <Option key={product._id} value={product._id}>
-                {product.nom} REF : ({product.reference})
-              </Option>
-            ))}
+          {user.type === "user"
+            ? products
+                ?.filter((el) => user?.magasinId?.includes(el.magasinId))
+                .map((product) => (
+                  <Option key={product._id} value={product._id}>
+                    {product.nom} REF : ({product.reference})
+                  </Option>
+                ))
+            : products.map((product) => (
+                <Option key={product._id} value={product._id}>
+                  {product.nom} REF : ({product.reference})
+                </Option>
+              ))}
         </Select>
       ),
     },
-    // {
-    //   title: "Magasin",
-    //   dataIndex: "magasinId",
-    //   key: "magasinId",
-    //   render: (value, record, index) => (
-    //     <Select
-    //       value={value}
-    //       style={{ width: "100%" }}
-    //       onChange={(val) => handleItemChange(index, "magasinId", val)}
-    //     >
-    //       {stores.map((store) => (
-    //         <Option key={store._id} value={store._id}>
-    //           {store.nom}
-    //         </Option>
-    //       ))}
-    //     </Select>
-    //   ),
-    // },
+
     {
       title: "Quantité",
       dataIndex: "quantity",
@@ -343,7 +338,13 @@ const InvoiceModalAddEdit = ({
       title: "Prix",
       dataIndex: "prixVente",
       key: "prixVente",
-      render: (value) => `${value.toFixed(2)} TND`,
+      render: (value, record, index) => (
+        <InputNumber
+          min={1}
+          value={value}
+          onChange={(val) => handleItemChange(index, "prixVente", val)}
+        />
+      ),
     },
     {
       title: "Total",

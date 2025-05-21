@@ -64,7 +64,9 @@ const Produit = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const stockResponse = await axios.get("https://rayhanaboutique.online/stock");
+      const stockResponse = await axios.get(
+        "https://rayhanaboutique.online/stock"
+      );
       if (stockResponse.data) {
         setSearch("");
         setFilterData([]);
@@ -72,7 +74,9 @@ const Produit = () => {
 
         const filteredData =
           user.type === "user"
-            ? stockResponse.data.filter((el) => el.magasinId === user.magasinId)
+            ? stockResponse.data.filter((el) =>
+                user?.magasinId?.includes(el.magasinId)
+              )
             : stockResponse.data;
 
         const sortedData = _.sortBy(filteredData, (o) => Number(o._id));
@@ -103,7 +107,9 @@ const Produit = () => {
       icon: <ExclamationCircleOutlined />,
       onOk: async () => {
         try {
-          await axios.delete(`https://rayhanaboutique.online/stock/${stockItem._id}`);
+          await axios.delete(
+            `https://rayhanaboutique.online/stock/${stockItem._id}`
+          );
           message.success("Produit supprimé avec succès.");
           handleRefetch();
         } catch (error) {
@@ -133,7 +139,9 @@ const Produit = () => {
               axios.delete(`https://rayhanaboutique.online/stock/${id}`)
             )
           );
-          message.success(`${selectedRowKeys.length} produit(s) supprimé(s) avec succès.`);
+          message.success(
+            `${selectedRowKeys.length} produit(s) supprimé(s) avec succès.`
+          );
           setSelectedRowKeys([]);
           handleRefetch();
         } catch (error) {
@@ -148,7 +156,9 @@ const Produit = () => {
 
   const loadStockByMagasin = async () => {
     try {
-      const response = await axios.get("https://rayhanaboutique.online/stock/all");
+      const response = await axios.get(
+        "https://rayhanaboutique.online/stock/all"
+      );
 
       // Process the raw data using lodash
       const processedData = _.chain(response.data)
@@ -320,11 +330,15 @@ const Produit = () => {
 
     try {
       setFileUploading(true);
-      await axios.post("https://rayhanaboutique.online/stock/extract", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await axios.post(
+        "https://rayhanaboutique.online/stock/extract",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       message.success(`${file.name} importé avec succès`);
       handleRefetch();
     } catch (error) {
@@ -459,8 +473,8 @@ const Produit = () => {
               {selectedRowKeys.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
                   <Text>{`${selectedRowKeys.length} produit(s) sélectionné(s)`}</Text>
-                  <Button 
-                    type="link" 
+                  <Button
+                    type="link"
                     onClick={() => setSelectedRowKeys([])}
                     style={{ marginLeft: 8 }}
                   >
@@ -468,7 +482,7 @@ const Produit = () => {
                   </Button>
                 </div>
               )}
-              
+
               <div className="table-responsive">
                 <Table
                   rowSelection={rowSelection}
