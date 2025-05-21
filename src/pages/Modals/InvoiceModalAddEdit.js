@@ -148,6 +148,9 @@ const InvoiceModalAddEdit = ({
         newItems[index].taille = product.taille;
         newItems[index].prixAchat = product.prixAchat;
         newItems[index].prixVente = product.prixVente;
+        newItems[
+          index
+        ].image = `https://rayhanaboutique.online/upload/${product.image}`;
       }
     }
 
@@ -236,6 +239,9 @@ const InvoiceModalAddEdit = ({
           quantity: item.quantity,
           prixAchat: item.prixAchat,
           prixVente: item.prixVente,
+          image: `https://rayhanaboutique.online/upload/${
+            products?.find((p) => p._id === item.stockId)?.image
+          }`,
         })),
         subtotal,
         tax,
@@ -295,30 +301,34 @@ const InvoiceModalAddEdit = ({
       dataIndex: "stockId",
       key: "stockId",
       render: (value, record, index) => (
-        <Select
-          value={value}
-          style={{ width: "100%" }}
-          onChange={(val) => handleItemChange(index, "stockId", val)}
-          showSearch
-          optionFilterProp="children"
-          filterOption={(input, option) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
-        >
-          {user.type === "user"
-            ? products
-                ?.filter((el) => user?.magasinId?.includes(el.magasinId))
-                .map((product) => (
+        <>
+          <img src={items[index]?.image} alt="" width={100} height={100} />
+
+          <Select
+            value={value}
+            style={{ width: "80%" }}
+            onChange={(val) => handleItemChange(index, "stockId", val)}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            {user.type === "user"
+              ? products
+                  ?.filter((el) => user?.magasinId?.includes(el.magasinId))
+                  .map((product) => (
+                    <Option key={product._id} value={product._id}>
+                      {product.nom} REF : ({product.reference})
+                    </Option>
+                  ))
+              : products.map((product) => (
                   <Option key={product._id} value={product._id}>
                     {product.nom} REF : ({product.reference})
                   </Option>
-                ))
-            : products.map((product) => (
-                <Option key={product._id} value={product._id}>
-                  {product.nom} REF : ({product.reference})
-                </Option>
-              ))}
-        </Select>
+                ))}
+          </Select>
+        </>
       ),
     },
 
