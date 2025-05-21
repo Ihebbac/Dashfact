@@ -257,7 +257,7 @@ const ProduitModalAddEdit = (props) => {
               <Form.Item
                 name="prixAchat"
                 label="Prix d'Achat (TND)"
-                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
+                rules={[{ required: false, message: "Ce champ est obligatoire" }]}
               >
                 <InputNumber
                   style={{ width: "100%" }}
@@ -273,7 +273,7 @@ const ProduitModalAddEdit = (props) => {
               <Form.Item
                 name="prixVente"
                 label="Prix de Vente (TND)"
-                rules={[{ required: true, message: "Ce champ est obligatoire" }]}
+                rules={[{ required: false, message: "Ce champ est obligatoire" }]}
               >
                 <InputNumber
                   style={{ width: "100%" }}
